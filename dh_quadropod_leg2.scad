@@ -3,33 +3,25 @@
 // A notable point here is that the length a of link i has to be rendered with
 // link i-1.
 
-resolution = 30;
+include <quad_params.scad>;
 
-jr = 9;
-jh = 15;
-ow = 2;
+//theta1 = -120; // from 0 to -180
+//theta2 = -45; // from -90 to 90
+//theta3 = 160; // from 0 to 180
+//theta4 = 0; // 0
 
-alpha1 = 0;
-a1     = 0;
-theta1 = 90;
-d1     = -30;
+//theta1 = 0; // from 0 to -180
+//theta2 = 53; // from -90 to 90
+//theta3 = 60; // from 0 to 180
+//theta4 = 0; // 0
 
-alpha2 = -90;
-a2     = 27.5;
-theta2 = -5;
-d2     = 43;
+theta1 = 0; // from 0 to -180
+theta2 = 53; // from -90 to 90
+theta3 = 60; // from 0 to 180
+theta4 = 0; // 0
 
-alpha3 = 0;
-a3     = 57.3;
-theta3 = 26;
-d3     = -18;
 
-alpha4 = 90;
-a4     = 106;
-theta4 = 0;
-d4     = 0;
-
-// FORWARD KINEMATICS
+// FORWARD KINEMATICS {{{
 
 // complete matrix:
 //    [
@@ -76,8 +68,10 @@ echo("Y", py);
 echo("Z", pz);
 echo();
 
+// }}} fk
 
-// INVERSE KINEMATICS
+// INVERSE MATRICES TEST {{{
+
 // undo manipulator transformations to put a green cube at the origin
 translate([0, 0, -d4]) rotate([0, 0, -theta4]) translate([-a4, 0, 0]) rotate([-alpha4, 0, 0])
 translate([0, 0, -d3]) rotate([0, 0, -theta3]) translate([-a3, 0, 0]) rotate([-alpha3, 0, 0])
@@ -144,89 +138,57 @@ rotate([alpha3, 0, 0]) translate([a3, 0, 0]) rotate([0, 0, theta3]) translate([0
 rotate([alpha4, 0, 0]) translate([a4, 0, 0]) rotate([0, 0, theta4]) translate([0, 0, d4])
     color ([0.0, 1.0, 0.0]) cube ([12, 12, 12], center=true, $fn=resolution);
 
-theta1_ik1 = atan2(-px, py) + atan2(sqrt(px*px + py*py - pow(d3 + d2, 2)), d3 + d2);
-theta1_ik2 = atan2(-px, py) - atan2(sqrt(px*px + py*py - pow(d3 + d2, 2)), d3 + d2);
-theta1_ik = theta1_ik1;
-
-ik_a = -4*a2*px*cos(theta1) - 4*a2*py*sin(theta1) + px*px*cos(2*theta1) + 2*px*py*sin(2*theta1) - py*py*cos(2*theta1) + 2*pow(pz - d1, 2) + 2*a2*a2 + px*px + py*py;
-ik_b = (ik_a/2 - a3*a3 - a4*a4) / (2*a3*a4);
-theta3_ik1 = atan2(sqrt(1 - ik_b*ik_b), ik_b);
-theta3_ik2 = atan2(-sqrt(1 - ik_b*ik_b), ik_b);
-theta3_ik = theta3_ik1;
-
-ik_c = a2 - (px*cos(theta1_ik) + py*sin(theta1_ik));
-ik_d = -pz + d1;
-ik_e = a4*sin(theta3_ik);
-theta2_ik1 = atan2(ik_c, ik_d) + atan2(sqrt(ik_c*ik_c + ik_d*ik_d - ik_e*ik_e), ik_e);
-theta2_ik2 = atan2(ik_c, ik_d) - atan2(sqrt(ik_c*ik_c + ik_d*ik_d - ik_e*ik_e), ik_e);
-
-
-echo("theta1, solution 1", theta1_ik1 - 360);
-echo("theta1, solution 2", theta1_ik2 - 360);
-
-echo("theta2, solution 1", theta2_ik1 - 360);
-echo("theta2, solution 2", theta2_ik2 - 360);
-
-echo("theta3, solution 1", theta3_ik1);
-echo("theta3, solution 2", theta3_ik2);
-
-echo();
-
-// RENDER MANIPULATOR
-
-dh_cone(alpha1, a1, theta1, d1);
-
-module dh_cone(alpha=0, a=0, theta=0, d=0) {
-    rotate([alpha, 0, 0])
-    translate([a, 0, 0])
-    rotate([0, 0, theta])
-    translate([0, 0, d]) {
-        color([231/255, 88/255, 88/255]) cylinder(r1=jr, r2=0, h=jh, center=true, $fn=resolution); // joint
-        color ([70/255, 70/255, 70/255]) translate([0, 0, -d/2]) cube ([ow, ow, abs(d)], center=true); // offset
-
-        rotate ([0, 90, 0]) cylinder (r = 2, h = a2, $fn = resolution); // link
-
-        dh_cone2(alpha2, a2, theta2, d2);
-    }
-}
-module dh_cone2(alpha=0, a=0, theta=0, d=0) {
-    rotate([alpha, 0, 0])
-    translate([a, 0, 0])
-    rotate([0, 0, theta])
-    translate([0, 0, d]) {
-        color([231/255, 88/255, 88/255]) cylinder(r1=jr, r2=0, h=jh, center=true, $fn=resolution); // joint
-        color ([70/255, 70/255, 70/255]) translate([0, 0, -d/2]) cube ([ow, ow, abs(d)], center=true); // offset
-
-        rotate ([0, 90, 0]) cylinder (r = 2, h = a3, $fn = resolution); // link
-
-        dh_cone3(alpha3, a3, theta3, d3);
-    }
-}
-module dh_cone3(alpha=0, a=0, theta=0, d=0) {
-    rotate([alpha, 0, 0])
-    translate([a, 0, 0])
-    rotate([0, 0, theta])
-    translate([0, 0, d]) {
-        color([231/255, 88/255, 88/255]) cylinder(r1=jr, r2=0, h=jh, center=true, $fn=resolution); // joint
-        color ([70/255, 70/255, 70/255]) translate([0, 0, -d/2]) cube ([ow, ow, abs(d)], center=true); // offset
-
-        rotate ([0, 90, 0]) cylinder (r = 2, h = a4, $fn = resolution); // link
-
-        dh_cone4(alpha4, a4, theta4, d4);
-    }
-}
-module dh_cone4(alpha=0, a=0, theta=0, d=0) {
-    rotate([alpha, 0, 0])
-    translate([a, 0, 0])
-    rotate([0, 0, theta])
-    translate([0, 0, d]) {
-        color([231/255, 88/255, 88/255]) cylinder(r1=jr, r2=0, h=jh, center=true, $fn=resolution); // joint
-        color ([70/255, 70/255, 70/255]) translate([0, 0, -d/2]) cube ([ow, ow, abs(d)], center=true); // offset
-    }
-}
-
 module crosshair() {
     color ([0.0, 0.0, 1.0]) cylinder (r=0.5, h=30, center=true, $fn=resolution);
     color ([0.0, 0.0, 1.0]) rotate ([0, 90, 0]) cylinder (r=0.5, h=30, center=true, $fn=resolution);
     color ([0.0, 0.0, 1.0]) rotate ([90, 0, 0]) cylinder (r=0.5, h=30, center=true, $fn=resolution);
 }
+
+// }}} inverse matrices test
+
+// ACTUAL IK CALCULATION
+x = px;
+y = py;
+z = pz;
+
+// theta1
+theta1_ik1 = atan2(-x, y) + atan2(sqrt(x*x + y*y - pow(d3 + d2, 2)), d3 + d2);
+theta1_ik2 = atan2(-x, y) - atan2(sqrt(x*x + y*y - pow(d3 + d2, 2)), d3 + d2);
+
+theta1_ik1r = round(theta1_ik1*10) / 10 - 360;
+theta1_ik2r = (round(theta1_ik2*10) / 10 - 360) % 360;
+theta1_ik = theta1_ik1r;
+
+// theta3
+ik_a = -4*a2*x*cos(theta1_ik) - 4*a2*y*sin(theta1_ik) + x*x*cos(2*theta1_ik) + 2*x*y*sin(2*theta1_ik) - y*y*cos(2*theta1_ik) + 2*pow(z - d1, 2) + 2*a2*a2 + x*x + y*y;
+ik_b1 = (ik_a/2 - a3*a3 - a4*a4) / (2*a3*a4);
+ik_b = round(ik_b1*1000000) / 1000000; // round to six places
+theta3_ik1 = atan2(sqrt(1 - ik_b*ik_b), ik_b);
+theta3_ik2 = atan2(-sqrt(1 - ik_b*ik_b), ik_b);
+
+theta3_ik1r = round(theta3_ik1*10) / 10;
+theta3_ik2r = round(theta3_ik2*10) / 10;
+theta3_ik = theta3_ik1r;
+
+// theta2
+ik_c = a2 - (x*cos(theta1_ik) + y*sin(theta1_ik));
+ik_d = -z + d1;
+ik_e = a4*sin(theta3_ik);
+ik_f = ik_c*ik_c + ik_d*ik_d - ik_e*ik_e;
+theta2_ik1 = atan2(ik_c, ik_d) + atan2(sqrt(ik_f), ik_e);
+theta2_ik2 = atan2(ik_c, ik_d) - atan2(sqrt(ik_f), ik_e);
+
+theta2_ik1r = round(theta2_ik1*10) / 10;
+theta2_ik2r = (round(theta2_ik2*10) / 10);
+theta2_ik = theta2_ik1r;
+
+// print results
+echo("theta1", theta1_ik1r, theta1_ik2r);
+echo("theta2", theta2_ik1r, theta2_ik2r);
+echo("theta3", theta3_ik1r, theta3_ik2r);
+echo();
+
+
+// RENDER THE MANIPULATOR
+
+include <quad_manipulator.scad>;
