@@ -1,6 +1,6 @@
 import bpy
 from mathutils import Vector, Euler, Matrix
-from math import radians, degrees, sin, cos, atan2, sqrt
+from math import radians, degrees, sin, cos, atan2, sqrt, pi
 
 def delete_meshes():
     candidate_list = [item.name for item in bpy.data.objects if item.type == "MESH"]
@@ -43,7 +43,7 @@ def create_joint(m, alpha, a1, a2, theta, d):
 
     return m
 
-def fk(a1, a2, a3, theta1, theta2, theta3, d1, d2, d3):
+def fk(a1, a2, a3, a4, theta1, theta2, theta3, d1, d2, d3):
     theta1 = radians(theta1)
     theta2 = radians(theta2)
     theta3 = radians(theta3)
@@ -62,6 +62,23 @@ def fk(a1, a2, a3, theta1, theta2, theta3, d1, d2, d3):
 
     return x, y, z
 
+class NoSolutionsError(Exception):
+    pass
+
+class IKError(Exception):
+    pass
+
+def convert_angle(a):
+    """
+    Return angle between -180 and 180 degrees.
+    """
+    if a >= pi:
+        a = a % pi - pi
+    elif a < -pi:
+        a = pi - abs(a) % pi
+
+    return round(degrees(a), 1)
+
 def ik_theta1(x, y, d2, d3):
     d = d2 + d3
     m = atan2(-x, y)
@@ -70,30 +87,24 @@ def ik_theta1(x, y, d2, d3):
     a1 = m + n
     a2 = m - n
 
-    s1 = round(degrees(a1), 1)
-    s2 = round(degrees(a2), 1)
-
-    print ('theta1:', s1, s2)
-
-    theta1 = s1
-    return theta1
+    return convert_angle(a1), convert_angle(a2)
 
 def ik_theta3(x, y, z, theta1, a2, a3, a4, d1):
-    theta1 = radians(theta1)
-    m = -4*a2*x*cos(theta1) - 4*a2*y*sin(theta1) + x*x*cos(2*theta1) + 2*x*y*sin(2*theta1) - y*y*cos(2*theta1) + 2*(z - d1)**2 + 2*a2*a2 + x*x + y*y;
+    th1 = radians(theta1)
+    m = -4*a2*x*cos(th1) - 4*a2*y*sin(th1) + x*x*cos(2*th1) + 2*x*y*sin(2*th1) - y*y*cos(2*th1) + 2*(z - d1)**2 + 2*a2*a2 + x*x + y*y;
     n = (m/2 - a3*a3 - a4*a4) / (2*a3*a4);
-    o = sqrt(1 - round(n*n, 4))
+    n2 = round(n*n, 4)
+
+    if n2 > 1:
+        #print ('No solution for angle %f' % theta1)
+        return ()
+
+    o = sqrt(1 - n2)
 
     a1 = atan2(o, n)
     a2 = atan2(-o, n)
 
-    s1 = round(degrees(a1), 1)
-    s2 = round(degrees(a2), 1)
-
-    print ('theta3:', s1, s2)
-
-    theta3 = s1
-    return theta3
+    return convert_angle(a1), convert_angle(a2)
 
 def ik_theta2(x, y, z, theta1, theta3, a2, a4, d1):
     theta1 = radians(theta1)
@@ -108,51 +119,78 @@ def ik_theta2(x, y, z, theta1, theta3, a2, a4, d1):
     a1 = q + r
     a2 = q - r
 
-    s1 = round(degrees(a1), 1)
-    s2 = round(degrees(a2), 1)
+    return convert_angle(a1), convert_angle(a2)
 
-    print ('theta2:', s1, s2)
+def ik(x, y, z, a1, a2, a3, a4, d1, d2, d3):
+    solutions = [(theta1, theta2, theta3) for theta1 in ik_theta1(x, y, d2, d3)
+                                          for theta3 in ik_theta3(x, y, z, theta1, a2, a3, a4, d1)
+                                          for theta2 in ik_theta2(x, y, z, theta1, theta3, a2, a4, d1)]
+    #print ('all solutions:', solutions)
 
-    theta2 = s1
-    return theta2
+    valid = []
+    for theta1, theta2, theta3 in solutions:
+        px, py, pz = fk(a1, a2, a3, a4, theta1, theta2, theta3, d1, d2, d3)
+        px, py, pz = round(px, 4), round(py, 4), round(pz, 4)
+        #print ('fk', (px, py, pz))
+        if abs(px - x) < 0.001 and abs(py - y) < 0.001 and abs(pz - z) < 0.001:
+            valid.append((theta1, theta2, theta3))
 
-print ()
-print ("Deleting all meshes...")
-delete_meshes()
+    print ('valid solutions', valid)
 
-alpha1 = 0;
-a1     = 0;
-d1     = -30;
+    if len(valid) >= 1:
+        return valid[0]
+    else:
+        return (0, 0, 0)
 
-alpha2 = -90;
-a2     = 27.5;
-d2     = 43;
+def render_manipulator(theta1, theta2, theta3):
+    alpha1 = 0;
+    a1     = 0;
+    d1     = -30;
 
-alpha3 = 0;
-a3     = 57.3;
-d3     = -18;
+    alpha2 = -90;
+    a2     = 27.5;
+    d2     = 43;
 
-alpha4 = 90;
-a4     = 106;
-d4     = 0;
+    alpha3 = 0;
+    a3     = 57.3;
+    d3     = -18;
 
-theta1 = -105.8
-theta2 = 53.8
-theta3 = -160
+    alpha4 = 90;
+    a4     = 106;
+    d4     = 0;
 
-m = Matrix()
-m = create_joint(m, alpha1, a1, a2, theta1, d1)
-m = create_joint(m, alpha2, a2, a3, theta2, d2)
-m = create_joint(m, alpha3, a3, a4, theta3, d3)
-m = create_joint(m, alpha4, a4, 0, 0, d4)
+    #print ("Deleting all meshes...")
+    delete_meshes()
 
-j = bpy.context.scene.objects.active
-print (j.location)
+    m = Matrix()
+    m = create_joint(m, alpha1, a1, a2, theta1, d1)
+    m = create_joint(m, alpha2, a2, a3, theta2, d2)
+    m = create_joint(m, alpha3, a3, a4, theta3, d3)
+    m = create_joint(m, alpha4, a4, 0, 0, d4)
 
-print (fk(a1, a2, a3, theta1, theta2, theta3, d1, d2, d3))
+    j = bpy.context.scene.objects.active
 
-x, y, z = j.location
+    print ()
+    print ('location', j.location)
+    print ('checking ik for', (theta1, theta2, theta3))
 
-theta1_ik = ik_theta1(x, y, d2, d3)
-theta3_ik = ik_theta3(x, y, z, theta1, a2, a3, a4, d1)
-theta2_ik = ik_theta2(x, y, z, theta1, theta3, a2, a4, d1)
+    x, y, z = j.location
+    x, y, z = round(x, 4), round(y, 4), round(z, 4)
+
+    theta1ik, theta2ik, theta3ik = ik(x, y, z, a1, a2, a3, a4, d1, d2, d3)
+
+    if theta1 != theta1ik or theta2 != theta2ik or theta3 != theta3ik:
+        print ('ik failure, expected', (theta1, theta2, theta3), 'got', (theta1ik, theta2ik, theta3ik))
+        raise IKError('ik failure, expected', (theta1, theta2, theta3), 'got', (theta1ik, theta2ik, theta3ik))
+
+
+theta1 = 0 # from 0 to -180
+theta2 = 53 # from -90 to 90
+theta3 = 60 # from 0 to 180
+
+
+for theta1 in range(0, -181, -1):
+    for theta2 in range(-90, 91):
+        render_manipulator(theta1, theta2, theta3)
+
+print ('done')
