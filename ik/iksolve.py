@@ -1,3 +1,5 @@
+from __future__ import division
+
 from math import radians, degrees, sin, cos, atan2, sqrt, pi
 
 def fk(a1, a2, a3, a4, theta1, theta2, theta3, d1, d2, d3):
@@ -96,9 +98,9 @@ def ik(x, y, z, a1, a2, a3, a4, d1, d2, d3):
     valid = []
     for theta1, theta2, theta3 in solutions:
         px, py, pz = fk(a1, a2, a3, a4, theta1, theta2, theta3, d1, d2, d3)
-        px, py, pz = round(px, 4), round(py, 4), round(pz, 4)
-        #print ('fk', (px, py, pz))
-        if abs(px - x) < 0.001 and abs(py - y) < 0.001 and abs(pz - z) < 0.001:
+        px, py, pz = round(px), round(py), round(pz)
+        print ('fk', (px, py, pz))
+        if abs(px - x) < 1 and abs(py - y) < 1 and abs(pz - z) < 1:
             valid.append((theta1, theta2, theta3))
 
     print ('valid solutions', valid)
