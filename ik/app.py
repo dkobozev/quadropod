@@ -10,6 +10,7 @@ from OpenGL.GLUT import *
 
 import time
 import threading
+import math
 
 from scene import SceneArea, Scene
 from iksolve import ik
@@ -38,11 +39,26 @@ class Manipulator(object):
     a4     = 106;
     d4     = 0;
 
-    def __init__(self, theta1=0, theta2=0, theta3=0):
+    def __init__(self, px, py, pz):
         self.initialized = True
-        self.theta1 = theta1
-        self.theta2 = theta2
-        self.theta3 = theta3
+        self.set_position(px, py, pz)
+
+    def set_position(self, x=None, y=None, z=None):
+        if x is None and y is None and z is None:
+            raise Exception('x, y or z parameters are required')
+
+        if x is not None:
+            self.x = x
+        if y is not None:
+            self.y = y
+        if z is not None:
+            self.z = z
+
+        self.theta1, self.theta2, self.theta3 = self.ik(self.x, self.y, self.z)
+
+    def set_position_rel(self, x=0, y=0, z=0):
+        self.x, self.y, self.z = self.x + x, self.y + y, self.z + z
+        self.theta1, self.theta2, self.theta3 = self.ik(self.x, self.y, self.z)
 
     def display(self):
         glPushMatrix()
@@ -88,25 +104,44 @@ class Manipulator(object):
         return ik(x, y, z, Manipulator.a1, Manipulator.a2, Manipulator.a3,
                   Manipulator.a4, Manipulator.d1, Manipulator.d2, Manipulator.d3)
 
+def loopseq(s):
+    i = 0
+    while 1:
+        if i >= len(s):
+            i = 0
+        yield s[i]
+        i += 1
+
 class Bot(object):
     def __init__(self):
         self.initialized = True
 
-        self.x = 0
-        self.y = 0
-        self.z = 130
-        self.dz = -1
-
         self.axesxl = 160.1
         self.axesyl = 108.1
 
-        theta1, theta2, theta3 = Manipulator.ik(80, -80, -130)
-        print theta1, theta2, theta3
+        self.x = 0
+        self.y = 0
+        self.z = 130
 
-        self.bl = Manipulator(theta1, theta2, theta3)
-        self.fl = Manipulator(theta1, theta2, theta3)
-        self.fr = Manipulator(theta1, theta2, theta3)
-        self.br = Manipulator(theta1, theta2, theta3)
+        self.dz = -0.5
+
+        self.legseq = loopseq([2, 0, 1, 3])
+
+        self.legs = [
+            Manipulator(0, -110, -130),
+            Manipulator(0, -110, -130),
+            Manipulator(0, -110, -130),
+            Manipulator(0, -110, -130),
+        ]
+        self.legsigns = [1, -1, -1, 1]
+
+        self.leg_param = 0
+        self.leg_dp = 0.005
+
+        self.leg_paramx = 0
+        self.leg_paramz = 0
+        self.current_leg = next(self.legseq)
+        self.step_count = 0
 
     def display(self):
         glPushMatrix()
@@ -142,27 +177,27 @@ class Bot(object):
         glRotate(180, 0, 0, 1)
         glScale(1, -1, 1)
         glFrontFace(GL_CW)
-        self.bl.display()
+        self.legs[0].display()
         glPopMatrix()
 
         glPushMatrix()
         glTranslate(x, -y, 0)
         glFrontFace(GL_CCW)
-        self.fl.display()
+        self.legs[1].display()
         glPopMatrix()
 
         glPushMatrix()
         glTranslate(x, y, 0)
         glScale(1, -1, 1)
         glFrontFace(GL_CW)
-        self.fr.display()
+        self.legs[2].display()
         glPopMatrix()
 
         glPushMatrix()
         glTranslate(-x, y, 0)
         glRotate(180, 0, 0, 1)
         glFrontFace(GL_CCW)
-        self.br.display()
+        self.legs[3].display()
         glPopMatrix()
 
         glDisable(GL_LIGHT1)
@@ -171,26 +206,42 @@ class Bot(object):
         glPopMatrix()
 
     def update(self):
+        self.raise_leg()
+        pass
+
+    def raise_leg(self):
+        if self.leg_param > 1:
+            self.leg_param = 0
+            self.current_leg = next(self.legseq)
+            self.leg_paramx = 0
+            self.leg_paramz = 0
+            self.step_count += 1
+
+        if self.step_count < 4:
+            body_x = 30
+            self.x += body_x * self.leg_dp
+            self.legs[0].set_position_rel(x=body_x * self.leg_dp)
+            self.legs[1].set_position_rel(x=-body_x * self.leg_dp)
+            self.legs[2].set_position_rel(x=-body_x * self.leg_dp)
+            self.legs[3].set_position_rel(x=body_x * self.leg_dp)
+
+            x = round(self.leg_param * 100, 2)
+            z = round(math.sin(math.pi * self.leg_param) * 10, 2)
+            self.legs[self.current_leg].set_position_rel(x=(x - self.leg_paramx) * -self.legsigns[self.current_leg],
+                                                         z=z - self.leg_paramz)
+            self.leg_paramx = x
+            self.leg_paramz = z
+
+            self.leg_param += self.leg_dp
+
+    def bounce(self, zmin, zmax):
         self.z += self.dz
-        if self.z < 100 or self.z > 170:
+        if self.z < zmin or self.z >= zmax:
             self.dz = -self.dz
-        theta1, theta2, theta3 = Manipulator.ik(80, -80, -self.z)
 
-        self.br.theta1 = theta1
-        self.br.theta2 = theta2
-        self.br.theta3 = theta3
+        for leg in self.legs:
+            leg.set_position(z=-self.z)
 
-        self.fr.theta1 = theta1
-        self.fr.theta2 = theta2
-        self.fr.theta3 = theta3
-
-        self.fl.theta1 = theta1
-        self.fl.theta2 = theta2
-        self.fl.theta3 = theta3
-
-        self.bl.theta1 = theta1
-        self.bl.theta2 = theta2
-        self.bl.theta3 = theta3
 
 class Ground(object):
     def __init__(self, lx, ly):

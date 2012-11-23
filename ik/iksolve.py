@@ -28,7 +28,7 @@ def convert_angle(a):
     """
     Return angle between -180 and 180 degrees.
     """
-    a = round(degrees(a))
+    a = round(degrees(a), 2)
 
     if a >= 180:
         a = a % 180 - 180
@@ -87,7 +87,7 @@ def ik_theta2(x, y, z, theta1, theta3, a2, a4, d1):
 
     return convert_angle(a1), convert_angle(a2)
 
-def ik(x, y, z, a1, a2, a3, a4, d1, d2, d3):
+def ik(x, y, z, a1, a2, a3, a4, d1, d2, d3, tolerance=1):
     solutions = [(theta1, theta2, theta3) for theta1 in ik_theta1(x, y, d2, d3)
                                           for theta3 in ik_theta3(x, y, z, theta1, a2, a3, a4, d1)
                                           for theta2 in ik_theta2(x, y, z, theta1, theta3, a2, a4, d1)]
@@ -96,18 +96,21 @@ def ik(x, y, z, a1, a2, a3, a4, d1, d2, d3):
     # check the solutions by running them through forward kinematics and
     # comparing obtained coordinates
     valid = []
+    fks = []
     for theta1, theta2, theta3 in solutions:
         px, py, pz = fk(a1, a2, a3, a4, theta1, theta2, theta3, d1, d2, d3)
-        px, py, pz = round(px), round(py), round(pz)
-        print ('fk', (px, py, pz))
-        if abs(px - x) < 1 and abs(py - y) < 1 and abs(pz - z) < 1:
+        px, py, pz = round(px, 3), round(py, 3), round(pz, 3)
+        fks.append((px, py, pz))
+        within_tolerance = abs(px - x) < tolerance and abs(py - y) < tolerance and abs(pz - z) < tolerance
+        if within_tolerance: # and -180 <= theta1 <= 0 and -90 <= theta2 <= 90 and 0 <= theta3 <= 180:
             valid.append((theta1, theta2, theta3))
-
-    print ('valid solutions', valid)
 
     if len(valid) >= 1:
         return valid[0]
     else:
+        print ('no valid solutions for:', (x, y, z))
+        print ('solutions', solutions)
+        print ('fks      ', fks)
         return (0, 0, 0)
 
 def verify_ik():
@@ -129,15 +132,18 @@ def verify_ik():
 
     theta1 = 180
 
-    #for theta1 in range(0, -181, -1):
-    for theta2 in range(-90, 91):
-        for theta3 in range(0, 181):
-            x, y, z = fk(a1, a2, a3, a4, theta1, theta2, theta3, d1, d2, d3)
-            theta1ik, theta2ik, theta3ik = ik(x, y, z, a1, a2, a3, a4, d1, d2, d3)
+    solutions = ik(13.2, -80, -104.5, a1, a2, a3, a4, d1, d2, d3)
+    print (solutions)
 
-            if theta1 != theta1ik or theta2 != theta2ik or theta3 != theta3ik:
-                raise IKError('ik failure, expected (%s, %s, %s), got (%s, %s, %s)' % (
-                    theta1, theta2, theta3, theta1ik, theta2ik, theta3ik))
+    #for theta1 in range(0, -181, -1):
+    #for theta2 in range(-90, 91):
+    #    for theta3 in range(0, 181):
+    #        x, y, z = fk(a1, a2, a3, a4, theta1, theta2, theta3, d1, d2, d3)
+    #        theta1ik, theta2ik, theta3ik = ik(x, y, z, a1, a2, a3, a4, d1, d2, d3)
+
+    #        if theta1 != theta1ik or theta2 != theta2ik or theta3 != theta3ik:
+    #            raise IKError('ik failure, expected (%s, %s, %s), got (%s, %s, %s)' % (
+    #                theta1, theta2, theta3, theta1ik, theta2ik, theta3ik))
 
 if __name__ == '__main__':
     verify_ik()
