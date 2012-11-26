@@ -41,6 +41,7 @@ class Manipulator(object):
 
     def __init__(self, px, py, pz):
         self.initialized = True
+        self.param_stack = []
         self.set_position(px, py, pz)
 
     def set_position(self, x=None, y=None, z=None):
@@ -104,6 +105,17 @@ class Manipulator(object):
         return ik(x, y, z, Manipulator.a1, Manipulator.a2, Manipulator.a3,
                   Manipulator.a4, Manipulator.d1, Manipulator.d2, Manipulator.d3)
 
+    def push_params(self):
+        self.param_stack.append((self.x, self.y, self.z, ))
+
+    def pop_params(self):
+        try:
+            x, y, z = self.param_stack.pop()
+            self.set_position(x, y, z)
+            return True
+        except IndexError:
+            return False
+
 def loopseq(s):
     i = 0
     while 1:
@@ -113,6 +125,9 @@ def loopseq(s):
         i += 1
 
 class Bot(object):
+    T_MAX = 100
+    T_INC = 1
+
     def __init__(self):
         self.initialized = True
 
@@ -125,8 +140,6 @@ class Bot(object):
 
         self.dz = -0.5
 
-        self.legseq = loopseq([2, 0, 1, 3])
-
         self.legs = [
             Manipulator(0, -110, -130),
             Manipulator(0, -110, -130),
@@ -135,13 +148,73 @@ class Bot(object):
         ]
         self.legsigns = [1, -1, -1, 1]
 
-        self.leg_param = 0
-        self.leg_dp = 0.005
+        self.param_stack = []
+        self.move_count = 0
+        self.t = 0
 
-        self.leg_paramx = 0
-        self.leg_paramz = 0
-        self.current_leg = next(self.legseq)
-        self.step_count = 0
+        self.moves = []
+        #self.moves.append((self.create_move_x, (60, ), ))
+        #self.moves.append((self.create_move_x, (-60, ), ))
+
+        #self.moves.append((self.create_raise_leg, (2, 40, 20),))
+        #self.moves.append((self.create_raise_leg, (0, 40, 20),))
+        #self.moves.append((self.create_raise_leg, (1, 40, 20),))
+        #self.moves.append((self.create_raise_leg, (3, 40, 20),))
+
+        self.moves.append((self.create_move_w_raise, (40, 2, 10, 20),))
+        #self.moves.append((self.create_move_w_raise, (40, 0, 20, 20),))
+        #self.moves.append((self.create_move_w_raise, (40, 1, 20, 20),))
+        #self.moves.append((self.create_move_w_raise, (40, 3, 20, 20),))
+
+        #self.moves.append((self.create_move_w_raise, (20, 2, 80, 20),))
+        #self.moves.append((self.create_move_w_raise, (20, 0, 60, 20),))
+        #self.moves.append((self.create_move_w_raise, (20, 1, 40, 20),))
+        #self.moves.append((self.create_move_w_raise, (20, 3, 20, 20),))
+
+        #self.moves.append((self.create_move_w_raise, (20, 2, 80, 20),))
+        #self.moves.append((self.create_move_w_raise, (20, 0, 60, 20),))
+        #self.moves.append((self.create_move_w_raise, (20, 1, 40, 20),))
+        #self.moves.append((self.create_move_w_raise, (20, 3, 20, 20),))
+
+        # prepare the first move
+        self.next_move(reset=True)
+
+    def push_params(self):
+        self.param_stack.append((self.x, self.y, self.z, ))
+        for leg in self.legs:
+            leg.push_params()
+
+    def pop_params(self):
+        try:
+            self.x, self.y, self.z = self.param_stack.pop()
+            success = True
+        except IndexError:
+            success = False
+        for leg in self.legs:
+            leg.pop_params()
+        return success
+
+    def prev_move(self):
+        self.pop_params()
+        self.push_params()
+        current_move = self.move_count
+        if current_move > 0:
+            self.t = self.T_MAX
+            self.next_move(reset=True)
+            self.update(animate=False)
+            while self.move_count < current_move - 1:
+                self.next_move()
+                self.update(False)
+            self.t = 0
+
+    def next_move(self, reset=False):
+        if reset:
+            self.move_count = 0
+            self.move_generator = iter(range(len(self.moves)))
+        move, params = self.moves[next(self.move_generator)]
+        self.move = move(*params)
+        if not reset:
+            self.move_count += 1
 
     def display(self):
         glPushMatrix()
@@ -205,34 +278,47 @@ class Bot(object):
         glDisable(GL_LIGHTING)
         glPopMatrix()
 
-    def update(self):
-        self.raise_leg()
-        pass
+    def update(self, animate=True):
+        if self.t > self.T_MAX:
+            self.t = 0
+            self.next_move()
 
-    def raise_leg(self):
-        if self.leg_param > 1:
-            self.leg_param = 0
-            self.current_leg = next(self.legseq)
-            self.leg_paramx = 0
-            self.leg_paramz = 0
-            self.step_count += 1
+        self.move(self.t / self.T_MAX)
 
-        if self.step_count < 4:
-            body_x = 30
-            self.x += body_x * self.leg_dp
-            self.legs[0].set_position_rel(x=body_x * self.leg_dp)
-            self.legs[1].set_position_rel(x=-body_x * self.leg_dp)
-            self.legs[2].set_position_rel(x=-body_x * self.leg_dp)
-            self.legs[3].set_position_rel(x=body_x * self.leg_dp)
+        if animate:
+            self.t += self.T_INC
 
-            x = round(self.leg_param * 100, 2)
-            z = round(math.sin(math.pi * self.leg_param) * 10, 2)
-            self.legs[self.current_leg].set_position_rel(x=(x - self.leg_paramx) * -self.legsigns[self.current_leg],
-                                                         z=z - self.leg_paramz)
-            self.leg_paramx = x
-            self.leg_paramz = z
+    def create_move_x(self, d):
+        botx = self.x
+        leg0x = self.legs[0].x
+        leg1x = self.legs[1].x
+        leg2x = self.legs[2].x
+        leg3x = self.legs[3].x
+        def move(t):
+            self.x = botx + d * t
+            self.legs[0].set_position(x=leg0x + d * t)
+            self.legs[1].set_position(x=leg1x - d * t)
+            self.legs[2].set_position(x=leg2x - d * t)
+            self.legs[3].set_position(x=leg3x + d * t)
+        return move
 
-            self.leg_param += self.leg_dp
+    def create_raise_leg(self, idx, d, h):
+        legx = self.legs[idx].x
+        legz = self.legs[idx].z
+        def move(t):
+            x = round(t * d, 2)
+            z = round(math.sin(math.pi * t) * h, 2)
+            self.legs[idx].set_position(x=legx + x * -self.legsigns[idx],
+                                        z=legz + z)
+        return move
+
+    def create_move_w_raise(self, body_d, leg_idx, leg_d, leg_h):
+        body = self.create_move_x(body_d)
+        leg = self.create_raise_leg(leg_idx, leg_d, leg_h)
+        def move(t):
+            body(t)
+            leg(t)
+        return move
 
     def bounce(self, zmin, zmax):
         self.z += self.dz
@@ -248,22 +334,57 @@ class Ground(object):
         self.lx = lx
         self.ly = ly
 
+        self.initialized = False
+
+    def init(self):
+        self.display_list = compile_display_list(self.draw)
         self.initialized = True
 
-    def display(self):
+    def draw(self):
         glPushMatrix()
+
+        # use polygon offset to push the rectangle back and draw lines on top
+        # see: # http://www.opengl.org/archives/resources/faq/technical/polygonoffset.htm
+        glEnable(GL_POLYGON_OFFSET_FILL)
+        glPolygonOffset(1.0, 1.0)
+
         glClearColor(0xaa/255, 0xf4/255, 0xf3/255, 0.0)
         glTranslate(-self.lx/2, -self.ly/2, 0)
         glColor(0x4d/255, 0x79/255, 0x42/255)
         glRectf(0.0, 0.0, float(self.lx), float(self.ly))
+
+        glDisable(GL_POLYGON_OFFSET_FILL)
+
+        glBegin(GL_LINES)
+        for p in range(0, self.lx, 10):
+            if p % 50 == 0:
+                glColor(1.0, 1.0, 1.0, 0.5)
+            else:
+                glColor(0.6, 0.6, 0.6, 0.5)
+            glVertex(p, 0, 0.01)
+            glVertex(p, self.ly, 0.01)
+
+        for p in range(0, self.ly, 10):
+            if p % 50 == 0:
+                glColor(1.0, 1.0, 1.0, 0.5)
+            else:
+                glColor(0.6, 0.6, 0.6, 0.5)
+            glVertex(0, p, 0.01)
+            glVertex(self.lx, p, 0.01)
+        glEnd()
+
         glPopMatrix()
+
+    def display(self):
+        glCallList(self.display_list)
 
 
 class App(object):
 
     def __init__(self):
         self.bot = Bot()
-        self.ground = Ground(100000, 100000)
+        self.bot.push_params()
+        self.ground = Ground(5000, 5000)
 
         self.scene = Scene()
         self.scene.add_actor(self.ground)
@@ -271,12 +392,61 @@ class App(object):
 
         glarea = SceneArea(self.scene)
 
+        self.btn_play = gtk.Button('Pause')
+        self.btn_rewind = gtk.Button('Rewind')
+        self.btn_prev_move = gtk.Button('Prev move')
+        self.btn_next_move = gtk.Button('Next move')
+        self.btn_top = gtk.Button('Top')
+        self.btn_quit = gtk.Button('Quit')
+
+        self.chk_loop = gtk.CheckButton('Loop')
+        self.chk_loop.set_active(False)
+
+        self.chk_ortho = gtk.CheckButton('Ortho')
+        self.chk_ortho.set_active(False)
+
+        self.entry_move = gtk.Entry()
+        self.entry_move.set_text(str(self.bot.move_count))
+
+        control_box = gtk.HBox()
+        control_box.set_border_width(5)
+        control_box.pack_start(self.btn_play)
+        control_box.pack_start(self.btn_rewind)
+        control_box.pack_start(self.btn_prev_move)
+        control_box.pack_start(self.btn_next_move)
+        control_box.pack_start(self.btn_top)
+        control_box.pack_start(self.btn_quit)
+
+        control_box2 = gtk.HBox()
+        control_box2.set_border_width(5)
+        control_box2.pack_start(self.chk_loop)
+        control_box2.pack_start(self.chk_ortho)
+        control_box2.pack_start(self.entry_move)
+
+        vbox = gtk.VBox()
+        vbox.pack_start(glarea)
+        vbox.pack_start(control_box, expand=False, fill=False)
+        vbox.pack_start(control_box2, expand=False, fill=False)
+
         self.window = gtk.Window()
         self.window.set_position(gtk.WIN_POS_CENTER)
         self.window.set_default_size(640, 480)
-        self.window.add(glarea)
+        self.window.add(vbox)
 
         self.window.connect('destroy', self.quit)
+        self.btn_play.connect('clicked', self.play)
+        self.btn_rewind.connect('clicked', self.rewind)
+        self.btn_prev_move.connect('clicked', self.prev_move)
+        self.btn_next_move.connect('clicked', self.next_move)
+        self.btn_top.connect('clicked', self.view_top)
+        self.btn_quit.connect('clicked', self.quit)
+
+        self.chk_loop.connect('toggled', self.toggle_loop)
+        self.chk_ortho.connect('toggled', self.toggle_ortho)
+
+        self.play = True
+        self.loop = False
+        self.ortho = False
 
         gtk.gdk.threads_init()
         self.thread = threading.Thread(target=self.mainloop)
@@ -289,10 +459,72 @@ class App(object):
     def quit(self, event):
         gtk.main_quit()
 
+    def play(self, event):
+        self.play = not self.play
+        self.update_play_button()
+
+    def update_play_button(self):
+        if self.play:
+            self.btn_play.set_label('Pause')
+        else:
+            self.btn_play.set_label('Play')
+
+    def rewind(self, event):
+        self.play = False
+        self.update_play_button()
+        self.reset_bot()
+        self.entry_move.set_text(str(self.bot.move_count))
+
+    def prev_move(self, event):
+        self.bot.prev_move()
+        self.entry_move.set_text(str(self.bot.move_count))
+
+    def next_move(self, event):
+        # finish the current move
+        self.bot.t = 1
+        self.bot.update(animate=False)
+        self.bot.t = 0
+        try:
+            self.bot.next_move()
+        except StopIteration:
+            pass
+        self.entry_move.set_text(str(self.bot.move_count))
+
+    def toggle_loop(self, widget):
+        self.loop = widget.get_active()
+
+    def toggle_ortho(self, widget):
+        self.ortho = widget.get_active()
+        if self.ortho:
+            self.scene.set_ortho()
+        else:
+            self.scene.set_perspective()
+
+    def reset_bot(self):
+        while self.bot.pop_params():
+            pass # empty the stack
+        self.bot.push_params()
+        self.bot.t = 0
+        self.bot.next_move(reset=True)
+
+    def view_top(self, event):
+        self.scene.rotate_view(0, -90)
+
     def mainloop(self):
         time.sleep(1)
         while True:
-            self.bot.update()
+            try:
+                move = self.bot.move_count
+                self.bot.update(self.play)
+                if self.bot.move_count != move:
+                    self.entry_move.set_text(str(self.bot.move_count))
+            except StopIteration:
+                for leg in self.bot.legs:
+                    print (leg.x, leg.y, leg.z)
+                self.play = self.loop
+                self.update_play_button()
+                self.reset_bot()
+
             self.scene.invalidate()
             time.sleep(.01)
 

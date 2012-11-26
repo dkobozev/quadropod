@@ -76,7 +76,7 @@ class ViewMode(object):
             self.zoom_factor = max(self.zoom_factor * 0.83, self.ZOOM_MIN)
 
 
-class ViewOrtho(ViewMode):
+class View2D(ViewMode):
     """
     Orthographic projection transformations (2D mode).
     """
@@ -85,7 +85,7 @@ class ViewOrtho(ViewMode):
     PAN_FACTOR =  4
 
     def __init__(self):
-        super(ViewOrtho, self).__init__()
+        super(View2D, self).__init__()
 
         self.x, self.y, self.z = 0.0, 0.0, 0.0
         self.zoom_factor       = 5.0
@@ -147,7 +147,7 @@ class ViewOrtho(ViewMode):
 
     def zoom(self, delta_x, delta_y):
         old_zoom = self.zoom_factor
-        super(ViewOrtho, self).zoom(delta_x, delta_y)
+        super(View2D, self).zoom(delta_x, delta_y)
 
         # adjust panning for new zoom level
         self.x *= self.zoom_factor / old_zoom

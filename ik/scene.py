@@ -9,7 +9,7 @@ pygtk.require('2.0')
 import gtk
 from gtk.gtkgl.apputils import GLArea, GLScene, GLSceneButton, GLSceneButtonMotion
 
-from views import ViewOrtho, ViewPerspective
+from views import View2D, ViewPerspective
 
 class SceneArea(GLArea):
     """
@@ -35,7 +35,7 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
         self.cursor_x = 0
         self.cursor_y = 0
 
-        self.view_ortho = ViewOrtho()
+        self.view_2d = View2D()
         self.view_perspective = ViewPerspective()
         self.current_view = self.view_perspective
 
@@ -85,9 +85,9 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
         # see: http://www.opengl.org/resources/faq/technical/lights.htm#ligh0090
         glEnable(GL_RESCALE_NORMAL)
 
-        self.view_ortho.begin(w, h)
+        self.view_2d.begin(w, h)
         self.draw_axes()
-        self.view_ortho.end()
+        self.view_2d.end()
 
         self.current_view.begin(w, h)
         self.current_view.display_transform()
@@ -175,7 +175,7 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
 
     def reset_view(self, both=False):
         if both:
-            self.view_ortho.reset_state()
+            self.view_2d.reset_state()
             self.view_perspective.reset_state()
         else:
             self.current_view.reset_state()
@@ -184,3 +184,9 @@ class Scene(GLScene, GLSceneButton, GLSceneButtonMotion):
         self.current_view.azimuth = azimuth
         self.current_view.elevation = elevation
         self.invalidate()
+
+    def set_ortho(self):
+        self.current_view.ortho = True
+
+    def set_perspective(self):
+        self.current_view.ortho = False
