@@ -153,28 +153,31 @@ class Bot(object):
         self.t = 0
 
         self.moves = []
-        #self.moves.append((self.create_move_x, (60, ), ))
-        #self.moves.append((self.create_move_x, (-60, ), ))
 
-        #self.moves.append((self.create_raise_leg, (2, 40, 20),))
-        #self.moves.append((self.create_raise_leg, (0, 40, 20),))
-        #self.moves.append((self.create_raise_leg, (1, 40, 20),))
-        #self.moves.append((self.create_raise_leg, (3, 40, 20),))
+        self.moves.append((self.create_move_w_raise, (20, 2, 60, 20),))
+        self.moves.append((self.create_move_w_raise, (20, 0, 60, 20),))
+        self.moves.append((self.create_move_w_raise, (20, 1, 60, 20),))
+        self.moves.append((self.create_move_w_raise, (20, 3, 60, 20),))
 
-        self.moves.append((self.create_move_w_raise, (40, 2, 10, 20),))
-        #self.moves.append((self.create_move_w_raise, (40, 0, 20, 20),))
-        #self.moves.append((self.create_move_w_raise, (40, 1, 20, 20),))
-        #self.moves.append((self.create_move_w_raise, (40, 3, 20, 20),))
+        self.moves.append((self.create_move_w_raise, (20, 2, 60, 20),))
+        self.moves.append((self.create_move_w_raise, (20, 0, 60, 20),))
+        self.moves.append((self.create_move_w_raise, (20, 1, 60, 20),))
+        self.moves.append((self.create_move_w_raise, (20, 3, 60, 20),))
 
-        #self.moves.append((self.create_move_w_raise, (20, 2, 80, 20),))
-        #self.moves.append((self.create_move_w_raise, (20, 0, 60, 20),))
-        #self.moves.append((self.create_move_w_raise, (20, 1, 40, 20),))
-        #self.moves.append((self.create_move_w_raise, (20, 3, 20, 20),))
+        self.moves.append((self.create_move_w_raise, (20, 2, 60, 20),))
+        self.moves.append((self.create_move_w_raise, (20, 0, 60, 20),))
+        self.moves.append((self.create_move_w_raise, (20, 1, 60, 20),))
+        self.moves.append((self.create_move_w_raise, (20, 3, 60, 20),))
 
-        #self.moves.append((self.create_move_w_raise, (20, 2, 80, 20),))
-        #self.moves.append((self.create_move_w_raise, (20, 0, 60, 20),))
-        #self.moves.append((self.create_move_w_raise, (20, 1, 40, 20),))
-        #self.moves.append((self.create_move_w_raise, (20, 3, 20, 20),))
+        self.moves.append((self.create_move_w_raise, (20, 2, 60, 20),))
+        self.moves.append((self.create_move_w_raise, (20, 0, 60, 20),))
+        self.moves.append((self.create_move_w_raise, (20, 1, 60, 20),))
+        self.moves.append((self.create_move_w_raise, (20, 3, 60, 20),))
+
+        self.moves.append((self.create_move_w_raise, (20, 2, 60, 20),))
+        self.moves.append((self.create_move_w_raise, (20, 0, 60, 20),))
+        self.moves.append((self.create_move_w_raise, (20, 1, 60, 20),))
+        self.moves.append((self.create_move_w_raise, (20, 3, 60, 20),))
 
         # prepare the first move
         self.next_move(reset=True)
@@ -481,13 +484,13 @@ class App(object):
 
     def next_move(self, event):
         # finish the current move
-        self.bot.t = 1
+        self.bot.t = Bot.T_MAX
         self.bot.update(animate=False)
-        self.bot.t = 0
         try:
             self.bot.next_move()
         except StopIteration:
             pass
+        self.bot.t = 0
         self.entry_move.set_text(str(self.bot.move_count))
 
     def toggle_loop(self, widget):
@@ -519,8 +522,6 @@ class App(object):
                 if self.bot.move_count != move:
                     self.entry_move.set_text(str(self.bot.move_count))
             except StopIteration:
-                for leg in self.bot.legs:
-                    print (leg.x, leg.y, leg.z)
                 self.play = self.loop
                 self.update_play_button()
                 self.reset_bot()
