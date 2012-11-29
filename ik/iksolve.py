@@ -43,7 +43,12 @@ def convert_angle(a):
 def ik_theta1(x, y, d2, d3):
     d = d2 + d3
     m = atan2(-x, y)
-    n = atan2(sqrt(x*x + y*y - d*d), d)
+    # TODO: something is borking here, investigate
+    xyd = abs(x*x + y*y - d*d)
+    if xyd > 0:
+        n = atan2(sqrt(xyd), d)
+    else:
+        n = 0
 
     a1 = m + n
     a2 = m - n

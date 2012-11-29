@@ -129,6 +129,13 @@ class Bot(object):
     T_INC = 1
 
     def __init__(self):
+        """
+        good parameters:
+
+        * z = 160, lx = 30, ly = 80, dbody = 30
+        * z = 160, lx = 30, ly = 60, dbody = 30
+
+        """
         self.initialized = True
 
         self.axesxl = 160.1
@@ -136,15 +143,17 @@ class Bot(object):
 
         self.x = 0
         self.y = 0
-        self.z = 130
+        self.z = 160
 
-        self.dz = -0.5
+        self.dz = -0.5 # bounce only
 
+        lx = 30
+        ly = 80
         self.legs = [
-            Manipulator(0, -110, -130),
-            Manipulator(0, -110, -130),
-            Manipulator(0, -110, -130),
-            Manipulator(0, -110, -130),
+            Manipulator(lx, -ly, -self.z),
+            Manipulator(lx, -ly, -self.z),
+            Manipulator(-lx, -ly, -self.z),
+            Manipulator(-lx, -ly, -self.z),
         ]
         self.legsigns = [1, -1, -1, 1]
 
@@ -154,30 +163,33 @@ class Bot(object):
 
         self.moves = []
 
-        self.moves.append((self.create_move_w_raise, (20, 2, 60, 20),))
-        self.moves.append((self.create_move_w_raise, (20, 0, 60, 20),))
-        self.moves.append((self.create_move_w_raise, (20, 1, 60, 20),))
-        self.moves.append((self.create_move_w_raise, (20, 3, 60, 20),))
+        dbody = 30
+        dleg = 3*dbody
+        self.moves.append((self.create_move_w_raise, (dbody, 2, dleg, 20),))
+        self.moves.append((self.create_move_w_raise, (dbody, 0, dleg, 20),))
+        self.moves.append((self.create_move_w_raise, (dbody, 1, dleg, 20),))
+        self.moves.append((self.create_move_w_raise, (dbody, 3, dleg, 20),))
 
-        self.moves.append((self.create_move_w_raise, (20, 2, 60, 20),))
-        self.moves.append((self.create_move_w_raise, (20, 0, 60, 20),))
-        self.moves.append((self.create_move_w_raise, (20, 1, 60, 20),))
-        self.moves.append((self.create_move_w_raise, (20, 3, 60, 20),))
+        self.moves.append((self.create_move_w_raise, (dbody, 2, dleg, 20),))
+        self.moves.append((self.create_move_w_raise, (dbody, 0, dleg, 20),))
+        self.moves.append((self.create_move_w_raise, (dbody, 1, dleg, 20),))
+        self.moves.append((self.create_move_w_raise, (dbody, 3, dleg, 20),))
 
-        self.moves.append((self.create_move_w_raise, (20, 2, 60, 20),))
-        self.moves.append((self.create_move_w_raise, (20, 0, 60, 20),))
-        self.moves.append((self.create_move_w_raise, (20, 1, 60, 20),))
-        self.moves.append((self.create_move_w_raise, (20, 3, 60, 20),))
+        self.moves.append((self.create_move_w_raise, (dbody, 2, dleg, 20),))
+        self.moves.append((self.create_move_w_raise, (dbody, 0, dleg, 20),))
+        self.moves.append((self.create_move_w_raise, (dbody, 1, dleg, 20),))
+        self.moves.append((self.create_move_w_raise, (dbody, 3, dleg, 20),))
 
-        self.moves.append((self.create_move_w_raise, (20, 2, 60, 20),))
-        self.moves.append((self.create_move_w_raise, (20, 0, 60, 20),))
-        self.moves.append((self.create_move_w_raise, (20, 1, 60, 20),))
-        self.moves.append((self.create_move_w_raise, (20, 3, 60, 20),))
+        self.moves.append((self.create_move_w_raise, (dbody, 2, dleg, 20),))
+        self.moves.append((self.create_move_w_raise, (dbody, 0, dleg, 20),))
+        self.moves.append((self.create_move_w_raise, (dbody, 1, dleg, 20),))
+        self.moves.append((self.create_move_w_raise, (dbody, 3, dleg, 20),))
 
-        self.moves.append((self.create_move_w_raise, (20, 2, 60, 20),))
-        self.moves.append((self.create_move_w_raise, (20, 0, 60, 20),))
-        self.moves.append((self.create_move_w_raise, (20, 1, 60, 20),))
-        self.moves.append((self.create_move_w_raise, (20, 3, 60, 20),))
+        self.moves.append((self.create_move_w_raise, (dbody, 2, dleg, 20),))
+        self.moves.append((self.create_move_w_raise, (dbody, 0, dleg, 20),))
+        self.moves.append((self.create_move_w_raise, (dbody, 1, dleg, 20),))
+        self.moves.append((self.create_move_w_raise, (dbody, 3, dleg, 20),))
+
 
         # prepare the first move
         self.next_move(reset=True)
@@ -248,6 +260,23 @@ class Bot(object):
 
         x, y = self.axesxl / 2, self.axesyl / 2
 
+        glColor(0.0, 0.0, 1.0, 1.0)
+        glRotate(180, 0, 1, 0)
+        gluCylinder(gluNewQuadric(), 2, 2, self.z, 30, 30)
+        glRotate(180, 0, 1, 0)
+
+        # robot body approximation
+        glColor(1.0, 0.0, 0.0, 1)
+        glutSolidSphere(3, 100, 100)
+        glColor(0.0, 0.0, 0.0, 0.5)
+        glBegin(GL_POLYGON)
+        glVertex(- self.axesxl/2, - self.axesyl/2, 0)
+        glVertex(+ self.axesxl/2, - self.axesyl/2, 0)
+        glVertex(+ self.axesxl/2, + self.axesyl/2, 0)
+        glVertex(- self.axesxl/2, + self.axesyl/2, 0)
+        glEnd()
+
+        # legs
         glPushMatrix()
         glTranslate(-x, -y, 0)
         glRotate(180, 0, 0, 1)
@@ -276,6 +305,30 @@ class Bot(object):
         self.legs[3].display()
         glPopMatrix()
 
+        # draw drop shadow
+        shadow_v = []
+        if round(abs(self.legs[0].z), 2) == round(self.z):
+            shadow_v.append((-x - self.legs[0].x, -y + self.legs[0].y, self.legs[0].z + 1))
+        if round(abs(self.legs[1].z), 2) == round(self.z):
+            shadow_v.append((x + self.legs[1].x, -y + self.legs[1].y, self.legs[1].z + 1))
+        if round(abs(self.legs[2].z), 2) == round(self.z):
+            shadow_v.append((x + self.legs[2].x, y - self.legs[2].y, self.legs[2].z + 1))
+        if round(abs(self.legs[3].z), 2) == round(self.z):
+            shadow_v.append((-x - self.legs[3].x, y - self.legs[3].y, self.legs[3].z + 1))
+
+        glColor(1.0, 0.0, 0.0, 0.5)
+        glBegin(GL_POLYGON)
+        for vx, vy, vz in shadow_v:
+            glVertex(vx, vy, vz)
+        glEnd()
+
+        if len(shadow_v) == 3:
+            cx = 0.33 * (shadow_v[0][0] + shadow_v[1][0] + shadow_v[2][0])
+            cy = 0.33 * (shadow_v[0][1] + shadow_v[1][1] + shadow_v[2][1])
+            cz = shadow_v[0][2]
+            glTranslate(cx*.5, cy*.5, cz)
+            glutSolidSphere(3, 100, 100)
+
         glDisable(GL_LIGHT1)
         glDisable(GL_LIGHT0)
         glDisable(GL_LIGHTING)
@@ -293,16 +346,43 @@ class Bot(object):
 
     def create_move_x(self, d):
         botx = self.x
+        boty = self.y
         leg0x = self.legs[0].x
         leg1x = self.legs[1].x
         leg2x = self.legs[2].x
         leg3x = self.legs[3].x
+
+        leg0y = self.legs[0].y
+        leg1y = self.legs[1].y
+        leg2y = self.legs[2].y
+        leg3y = self.legs[3].y
         def move(t):
-            self.x = botx + d * t
-            self.legs[0].set_position(x=leg0x + d * t)
-            self.legs[1].set_position(x=leg1x - d * t)
-            self.legs[2].set_position(x=leg2x - d * t)
-            self.legs[3].set_position(x=leg3x + d * t)
+            x, y = self.axesxl / 2, self.axesyl / 2
+            shadow_v = []
+            if round(abs(self.legs[0].z), 2) == round(self.z):
+                shadow_v.append((-x - self.legs[0].x, -y + self.legs[0].y, self.legs[0].z + 1))
+            if round(abs(self.legs[1].z), 2) == round(self.z):
+                shadow_v.append((x + self.legs[1].x, -y + self.legs[1].y, self.legs[1].z + 1))
+            if round(abs(self.legs[2].z), 2) == round(self.z):
+                shadow_v.append((x + self.legs[2].x, y - self.legs[2].y, self.legs[2].z + 1))
+            if round(abs(self.legs[3].z), 2) == round(self.z):
+                shadow_v.append((-x - self.legs[3].x, y - self.legs[3].y, self.legs[3].z + 1))
+            if len(shadow_v) == 3:
+                cx = 0.33 * (shadow_v[0][0] + shadow_v[1][0] + shadow_v[2][0])
+                cy = 0.33 * (shadow_v[0][1] + shadow_v[1][1] + shadow_v[2][1])
+            else:
+                cx = 0
+                cy = 0
+
+            cx = 0
+            cy = 0
+
+            self.x = botx + d * t + cx
+            #self.y = boty + cy
+            self.legs[0].set_position(x=leg0x + d * t + cx, y=leg0y - cy)
+            self.legs[1].set_position(x=leg1x - d * t - cx, y=leg1y - cy)
+            self.legs[2].set_position(x=leg2x - d * t - cx, y=leg2y + cy)
+            self.legs[3].set_position(x=leg3x + d * t + cx, y=leg3y + cy)
         return move
 
     def create_raise_leg(self, idx, d, h):
@@ -511,7 +591,7 @@ class App(object):
         self.bot.next_move(reset=True)
 
     def view_top(self, event):
-        self.scene.rotate_view(0, -90)
+        self.scene.rotate_view(90, -90)
 
     def mainloop(self):
         time.sleep(1)
