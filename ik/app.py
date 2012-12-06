@@ -116,6 +116,13 @@ class Manipulator(object):
         except IndexError:
             return False
 
+    def __str__(self):
+        return "Manipulator(%s, %s, %s) => [%s, %s, %s]" % (self.x, self.y, self.z,
+                self.theta1, self.theta2, self.theta3)
+
+    def __repr__(self):
+        return "Manipulator(%s, %s, %s)" % (self.x, self.y, self.z)
+
 def loopseq(s):
     i = 0
     while 1:
@@ -134,6 +141,7 @@ class Bot(object):
 
         * z = 160, lx = 30, ly = 80, dbody = 30
         * z = 160, lx = 30, ly = 60, dbody = 30
+        * z = 120, lx = 60, ly = 80, dbody = ?
 
         """
         self.initialized = True
@@ -143,17 +151,17 @@ class Bot(object):
 
         self.x = 0
         self.y = 0
-        self.z = 160
+        self.z = 120
 
         self.dz = -0.5 # bounce only
 
-        lx = 30
+        lx = 60
         ly = 80
         self.legs = [
             Manipulator(lx, -ly, -self.z),
             Manipulator(lx, -ly, -self.z),
-            Manipulator(-lx, -ly, -self.z),
-            Manipulator(-lx, -ly, -self.z),
+            Manipulator(lx, -ly, -self.z),
+            Manipulator(lx, -ly, -self.z),
         ]
         self.legsigns = [1, -1, -1, 1]
 
@@ -161,38 +169,84 @@ class Bot(object):
         self.move_count = 0
         self.t = 0
 
+        # init moves
         self.moves = []
 
-        dbody = 30
-        dleg = 3*dbody
-        self.moves.append((self.create_move_w_raise, (dbody, 2, dleg, 20),))
-        self.moves.append((self.create_move_w_raise, (dbody, 0, dleg, 20),))
-        self.moves.append((self.create_move_w_raise, (dbody, 1, dleg, 20),))
-        self.moves.append((self.create_move_w_raise, (dbody, 3, dleg, 20),))
+        self.moves.append((self.create_move_xy, (20, 20)))
+        self.moves.append((self.create_raise_leg, (0, 70, 30)))
+        self.moves.append((self.create_lower_leg, (0, 70, 30)))
+        self.moves.append((self.create_raise_leg, (1, 20, 30)))
+        self.moves.append((self.create_lower_leg, (1, 20, 30)))
 
-        self.moves.append((self.create_move_w_raise, (dbody, 2, dleg, 20),))
-        self.moves.append((self.create_move_w_raise, (dbody, 0, dleg, 20),))
-        self.moves.append((self.create_move_w_raise, (dbody, 1, dleg, 20),))
-        self.moves.append((self.create_move_w_raise, (dbody, 3, dleg, 20),))
+        #self.moves.append((self.create_move_xy, (-30, -40)))
+        #self.moves.append((self.create_raise_leg, (2, 20, 30)))
+        #self.moves.append((self.create_lower_leg, (2, 20, 30)))
 
-        self.moves.append((self.create_move_w_raise, (dbody, 2, dleg, 20),))
-        self.moves.append((self.create_move_w_raise, (dbody, 0, dleg, 20),))
-        self.moves.append((self.create_move_w_raise, (dbody, 1, dleg, 20),))
-        self.moves.append((self.create_move_w_raise, (dbody, 3, dleg, 20),))
-
-        self.moves.append((self.create_move_w_raise, (dbody, 2, dleg, 20),))
-        self.moves.append((self.create_move_w_raise, (dbody, 0, dleg, 20),))
-        self.moves.append((self.create_move_w_raise, (dbody, 1, dleg, 20),))
-        self.moves.append((self.create_move_w_raise, (dbody, 3, dleg, 20),))
-
-        self.moves.append((self.create_move_w_raise, (dbody, 2, dleg, 20),))
-        self.moves.append((self.create_move_w_raise, (dbody, 0, dleg, 20),))
-        self.moves.append((self.create_move_w_raise, (dbody, 1, dleg, 20),))
-        self.moves.append((self.create_move_w_raise, (dbody, 3, dleg, 20),))
-
+        #self.moves.append((self.create_move_xy, (30, 0)))
+        #self.moves.append((self.create_raise_leg, (2, 30, 20)))
 
         # prepare the first move
-        self.next_move(reset=True)
+        try:
+            self.next_move(reset=True)
+        except StopIteration:
+            self.move = None
+
+    def create_move_xy(self, dx, dy):
+        botx = self.x
+        boty = self.y
+        leg0x = self.legs[0].x
+        leg1x = self.legs[1].x
+        leg2x = self.legs[2].x
+        leg3x = self.legs[3].x
+
+        leg0y = self.legs[0].y
+        leg1y = self.legs[1].y
+        leg2y = self.legs[2].y
+        leg3y = self.legs[3].y
+        def move(t):
+            self.x = botx + dx*t
+            self.y = boty + dy*t
+            self.legs[0].set_position(x=leg0x + dx*t, y=leg0y - dy*t)
+            self.legs[1].set_position(x=leg1x - dx*t, y=leg1y - dy*t)
+            self.legs[2].set_position(x=leg2x - dx*t, y=leg2y + dy*t)
+            self.legs[3].set_position(x=leg3x + dx*t, y=leg3y + dy*t)
+        return move
+
+    def create_raise_leg(self, idx, d, h):
+        legx = self.legs[idx].x
+        legz = self.legs[idx].z
+        def move(t):
+            x = round(t * d, 2)
+            z = round(math.sin(math.pi/2 * t) * h, 2)
+            self.legs[idx].set_position(x=legx + x * -self.legsigns[idx],
+                                        z=legz + z)
+        return move
+
+    def create_lower_leg(self, idx, d, h):
+        legx = self.legs[idx].x
+        legz = self.legs[idx].z
+        def move(t):
+            x = round(t * d, 2)
+            z = round((math.sin(math.pi/2 + math.pi/2 * t) - 1) * h, 2)
+            self.legs[idx].set_position(x=legx + x * -self.legsigns[idx],
+                                        z=legz + z)
+        return move
+
+    def create_move_w_raise(self, dx, dy, leg_idx, leg_d, leg_h):
+        body = self.create_move_xy(dx, dy)
+        leg = self.create_raise_leg(leg_idx, leg_d, leg_h)
+        def move(t):
+            body(t)
+            leg(t)
+        return move
+
+    def bounce(self, zmin, zmax):
+        self.z += self.dz
+        if self.z < zmin or self.z >= zmax:
+            self.dz = -self.dz
+
+        for leg in self.legs:
+            leg.set_position(z=-self.z)
 
     def push_params(self):
         self.param_stack.append((self.x, self.y, self.z, ))
@@ -322,11 +376,12 @@ class Bot(object):
             glVertex(vx, vy, vz)
         glEnd()
 
+        # draw the centroid of a triangle formed by three legs touching the ground
         if len(shadow_v) == 3:
             cx = 0.33 * (shadow_v[0][0] + shadow_v[1][0] + shadow_v[2][0])
             cy = 0.33 * (shadow_v[0][1] + shadow_v[1][1] + shadow_v[2][1])
             cz = shadow_v[0][2]
-            glTranslate(cx*.5, cy*.5, cz)
+            glTranslate(cx, cy, cz)
             glutSolidSphere(3, 100, 100)
 
         glDisable(GL_LIGHT1)
@@ -337,79 +392,15 @@ class Bot(object):
     def update(self, animate=True):
         if self.t > self.T_MAX:
             self.t = 0
+            for leg in self.legs:
+                print (leg)
             self.next_move()
 
-        self.move(self.t / self.T_MAX)
+        if self.move is not None:
+            self.move(self.t / self.T_MAX)
 
         if animate:
             self.t += self.T_INC
-
-    def create_move_x(self, d):
-        botx = self.x
-        boty = self.y
-        leg0x = self.legs[0].x
-        leg1x = self.legs[1].x
-        leg2x = self.legs[2].x
-        leg3x = self.legs[3].x
-
-        leg0y = self.legs[0].y
-        leg1y = self.legs[1].y
-        leg2y = self.legs[2].y
-        leg3y = self.legs[3].y
-        def move(t):
-            x, y = self.axesxl / 2, self.axesyl / 2
-            shadow_v = []
-            if round(abs(self.legs[0].z), 2) == round(self.z):
-                shadow_v.append((-x - self.legs[0].x, -y + self.legs[0].y, self.legs[0].z + 1))
-            if round(abs(self.legs[1].z), 2) == round(self.z):
-                shadow_v.append((x + self.legs[1].x, -y + self.legs[1].y, self.legs[1].z + 1))
-            if round(abs(self.legs[2].z), 2) == round(self.z):
-                shadow_v.append((x + self.legs[2].x, y - self.legs[2].y, self.legs[2].z + 1))
-            if round(abs(self.legs[3].z), 2) == round(self.z):
-                shadow_v.append((-x - self.legs[3].x, y - self.legs[3].y, self.legs[3].z + 1))
-            if len(shadow_v) == 3:
-                cx = 0.33 * (shadow_v[0][0] + shadow_v[1][0] + shadow_v[2][0])
-                cy = 0.33 * (shadow_v[0][1] + shadow_v[1][1] + shadow_v[2][1])
-            else:
-                cx = 0
-                cy = 0
-
-            cx = 0
-            cy = 0
-
-            self.x = botx + d * t + cx
-            #self.y = boty + cy
-            self.legs[0].set_position(x=leg0x + d * t + cx, y=leg0y - cy)
-            self.legs[1].set_position(x=leg1x - d * t - cx, y=leg1y - cy)
-            self.legs[2].set_position(x=leg2x - d * t - cx, y=leg2y + cy)
-            self.legs[3].set_position(x=leg3x + d * t + cx, y=leg3y + cy)
-        return move
-
-    def create_raise_leg(self, idx, d, h):
-        legx = self.legs[idx].x
-        legz = self.legs[idx].z
-        def move(t):
-            x = round(t * d, 2)
-            z = round(math.sin(math.pi * t) * h, 2)
-            self.legs[idx].set_position(x=legx + x * -self.legsigns[idx],
-                                        z=legz + z)
-        return move
-
-    def create_move_w_raise(self, body_d, leg_idx, leg_d, leg_h):
-        body = self.create_move_x(body_d)
-        leg = self.create_raise_leg(leg_idx, leg_d, leg_h)
-        def move(t):
-            body(t)
-            leg(t)
-        return move
-
-    def bounce(self, zmin, zmax):
-        self.z += self.dz
-        if self.z < zmin or self.z >= zmax:
-            self.dz = -self.dz
-
-        for leg in self.legs:
-            leg.set_position(z=-self.z)
 
 
 class Ground(object):
@@ -467,6 +458,7 @@ class App(object):
     def __init__(self):
         self.bot = Bot()
         self.bot.push_params()
+
         self.ground = Ground(5000, 5000)
 
         self.scene = Scene()
@@ -604,7 +596,8 @@ class App(object):
             except StopIteration:
                 self.play = self.loop
                 self.update_play_button()
-                self.reset_bot()
+                self.bot.t = Bot.T_MAX
+                #self.reset_bot()
 
             self.scene.invalidate()
             time.sleep(.01)
