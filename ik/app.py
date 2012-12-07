@@ -155,8 +155,8 @@ class Bot(object):
 
         self.dz = -0.5 # bounce only
 
-        lx = 60
-        ly = 80
+        lx = 50
+        ly = 76
         self.legs = [
             Manipulator(lx, -ly, -self.z),
             Manipulator(lx, -ly, -self.z),
@@ -172,12 +172,53 @@ class Bot(object):
         # init moves
         self.moves = []
 
-        self.moves.append((self.create_move_xy, (20, 20)))
-        self.moves.append((self.create_raise_leg, (0, 70, 30)))
-        self.moves.append((self.create_lower_leg, (0, 70, 30)))
-        self.moves.append((self.create_raise_leg, (1, 20, 30)))
-        self.moves.append((self.create_lower_leg, (1, 20, 30)))
+        self.moves.append((self.create_move_xy, (30, 30)))
+        self.moves.append((self.create_raise_leg, (0, 45, 30)))
+        self.moves.append((self.create_lower_leg, (0, 45, 30)))
+        self.moves.append((self.create_raise_leg, (1, 45, 30)))
+        self.moves.append((self.create_lower_leg, (1, 45, 30)))
+        self.moves.append((self.create_move_xy, (30, -60)))
+        self.moves.append((self.create_raise_leg, (3, 45, 30)))
+        self.moves.append((self.create_lower_leg, (3, 45, 30)))
+        self.moves.append((self.create_raise_leg, (2, 45, 30)))
+        self.moves.append((self.create_lower_leg, (2, 45, 30)))
+        self.moves.append((self.create_move_xy, (30, 30)))
 
+        self.moves.append((self.create_move_xy, (30, 30)))
+        self.moves.append((self.create_raise_leg, (0, 45, 30)))
+        self.moves.append((self.create_lower_leg, (0, 45, 30)))
+        self.moves.append((self.create_raise_leg, (1, 45, 30)))
+        self.moves.append((self.create_lower_leg, (1, 45, 30)))
+        self.moves.append((self.create_move_xy, (30, -60)))
+        self.moves.append((self.create_raise_leg, (3, 45, 30)))
+        self.moves.append((self.create_lower_leg, (3, 45, 30)))
+        self.moves.append((self.create_raise_leg, (2, 45, 30)))
+        self.moves.append((self.create_lower_leg, (2, 45, 30)))
+        self.moves.append((self.create_move_xy, (30, 30)))
+
+        self.moves.append((self.create_move_xy, (30, 30)))
+        self.moves.append((self.create_raise_leg, (0, 45, 30)))
+        self.moves.append((self.create_lower_leg, (0, 45, 30)))
+        self.moves.append((self.create_raise_leg, (1, 45, 30)))
+        self.moves.append((self.create_lower_leg, (1, 45, 30)))
+        self.moves.append((self.create_move_xy, (30, -60)))
+        self.moves.append((self.create_raise_leg, (3, 45, 30)))
+        self.moves.append((self.create_lower_leg, (3, 45, 30)))
+        self.moves.append((self.create_raise_leg, (2, 45, 30)))
+        self.moves.append((self.create_lower_leg, (2, 45, 30)))
+        self.moves.append((self.create_move_xy, (30, 30)))
+
+        self.moves.append((self.create_move_xy, (30, 30)))
+        self.moves.append((self.create_raise_leg, (0, 45, 30)))
+        self.moves.append((self.create_lower_leg, (0, 45, 30)))
+        self.moves.append((self.create_raise_leg, (1, 45, 30)))
+        self.moves.append((self.create_lower_leg, (1, 45, 30)))
+        self.moves.append((self.create_move_xy, (30, -60)))
+        self.moves.append((self.create_raise_leg, (3, 45, 30)))
+        self.moves.append((self.create_lower_leg, (3, 45, 30)))
+        self.moves.append((self.create_raise_leg, (2, 45, 30)))
+        self.moves.append((self.create_lower_leg, (2, 45, 30)))
+        self.moves.append((self.create_move_xy, (30, 30)))
         #self.moves.append((self.create_move_xy, (-30, -40)))
         #self.moves.append((self.create_raise_leg, (2, 20, 30)))
         #self.moves.append((self.create_lower_leg, (2, 20, 30)))
