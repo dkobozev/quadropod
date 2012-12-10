@@ -43,11 +43,11 @@ def convert_angle(a):
 def ik_theta1(x, y, d2, d3):
     d = d2 + d3
     m = atan2(-x, y)
-    # TODO: something is borking here, investigate
     xyd = abs(x*x + y*y - d*d)
-    if xyd > 0:
+    if xyd >= 0:
         n = atan2(sqrt(xyd), d)
     else:
+        # TODO: probably throw exception here?
         n = 0
 
     a1 = m + n
@@ -137,7 +137,11 @@ def verify_ik():
 
     theta1 = 180
 
-    solutions = ik(13.2, -80, -104.5, a1, a2, a3, a4, d1, d2, d3)
+    
+    theta1, theta2, theta3 = -5, -90, 0
+    x, y, z = fk(a1, a2, a3, a4, theta1, theta2, theta3, d1, d2, d3)
+    print(x, y, z)
+    solutions = ik(x, y, z, a1, a2, a3, a4, d1, d2, d3)
     print (solutions)
 
     #for theta1 in range(0, -181, -1):

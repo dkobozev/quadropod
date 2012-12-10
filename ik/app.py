@@ -165,6 +165,10 @@ class Bot(object):
         ]
         self.legsigns = [1, -1, -1, 1]
 
+        for leg in self.legs:
+            print leg
+
+
         self.param_stack = []
         self.move_count = 0
         self.t = 0
@@ -172,53 +176,18 @@ class Bot(object):
         # init moves
         self.moves = []
 
-        self.moves.append((self.create_move_xy, (30, 30)))
-        self.moves.append((self.create_raise_leg, (0, 45, 30)))
-        self.moves.append((self.create_lower_leg, (0, 45, 30)))
-        self.moves.append((self.create_raise_leg, (1, 45, 30)))
-        self.moves.append((self.create_lower_leg, (1, 45, 30)))
-        self.moves.append((self.create_move_xy, (30, -60)))
-        self.moves.append((self.create_raise_leg, (3, 45, 30)))
-        self.moves.append((self.create_lower_leg, (3, 45, 30)))
-        self.moves.append((self.create_raise_leg, (2, 45, 30)))
-        self.moves.append((self.create_lower_leg, (2, 45, 30)))
-        self.moves.append((self.create_move_xy, (30, 30)))
+        #self.moves.append((self.create_move_xy, (30, 30)))
+        #self.moves.append((self.create_raise_leg, (0, 45, 30)))
+        #self.moves.append((self.create_lower_leg, (0, 45, 30)))
+        #self.moves.append((self.create_raise_leg, (1, 45, 30)))
+        #self.moves.append((self.create_lower_leg, (1, 45, 30)))
+        #self.moves.append((self.create_move_xy, (30, -60)))
+        #self.moves.append((self.create_raise_leg, (3, 45, 30)))
+        #self.moves.append((self.create_lower_leg, (3, 45, 30)))
+        #self.moves.append((self.create_raise_leg, (2, 45, 30)))
+        #self.moves.append((self.create_lower_leg, (2, 45, 30)))
+        #self.moves.append((self.create_move_xy, (30, 30)))
 
-        self.moves.append((self.create_move_xy, (30, 30)))
-        self.moves.append((self.create_raise_leg, (0, 45, 30)))
-        self.moves.append((self.create_lower_leg, (0, 45, 30)))
-        self.moves.append((self.create_raise_leg, (1, 45, 30)))
-        self.moves.append((self.create_lower_leg, (1, 45, 30)))
-        self.moves.append((self.create_move_xy, (30, -60)))
-        self.moves.append((self.create_raise_leg, (3, 45, 30)))
-        self.moves.append((self.create_lower_leg, (3, 45, 30)))
-        self.moves.append((self.create_raise_leg, (2, 45, 30)))
-        self.moves.append((self.create_lower_leg, (2, 45, 30)))
-        self.moves.append((self.create_move_xy, (30, 30)))
-
-        self.moves.append((self.create_move_xy, (30, 30)))
-        self.moves.append((self.create_raise_leg, (0, 45, 30)))
-        self.moves.append((self.create_lower_leg, (0, 45, 30)))
-        self.moves.append((self.create_raise_leg, (1, 45, 30)))
-        self.moves.append((self.create_lower_leg, (1, 45, 30)))
-        self.moves.append((self.create_move_xy, (30, -60)))
-        self.moves.append((self.create_raise_leg, (3, 45, 30)))
-        self.moves.append((self.create_lower_leg, (3, 45, 30)))
-        self.moves.append((self.create_raise_leg, (2, 45, 30)))
-        self.moves.append((self.create_lower_leg, (2, 45, 30)))
-        self.moves.append((self.create_move_xy, (30, 30)))
-
-        self.moves.append((self.create_move_xy, (30, 30)))
-        self.moves.append((self.create_raise_leg, (0, 45, 30)))
-        self.moves.append((self.create_lower_leg, (0, 45, 30)))
-        self.moves.append((self.create_raise_leg, (1, 45, 30)))
-        self.moves.append((self.create_lower_leg, (1, 45, 30)))
-        self.moves.append((self.create_move_xy, (30, -60)))
-        self.moves.append((self.create_raise_leg, (3, 45, 30)))
-        self.moves.append((self.create_lower_leg, (3, 45, 30)))
-        self.moves.append((self.create_raise_leg, (2, 45, 30)))
-        self.moves.append((self.create_lower_leg, (2, 45, 30)))
-        self.moves.append((self.create_move_xy, (30, 30)))
         #self.moves.append((self.create_move_xy, (-30, -40)))
         #self.moves.append((self.create_raise_leg, (2, 20, 30)))
         #self.moves.append((self.create_lower_leg, (2, 20, 30)))
@@ -641,7 +610,7 @@ class App(object):
                 #self.reset_bot()
 
             self.scene.invalidate()
-            time.sleep(.01)
+            time.sleep(.008)
 
 
 if __name__ == '__main__':

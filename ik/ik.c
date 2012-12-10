@@ -152,15 +152,11 @@ int ik_theta2(float x, float y, float z,
 
 int ik(float x, float y, float z,
        float a1, float a2, float a3, float a4, float d1, float d2, float d3,
-       float *iksolutions)
+       float *solutions)
 {
     float th1[2], th2[2], th3[2];
-    float solutions[24];
     int i, j, k;
     int n = 0;
-    float px, py, pz;
-    int valid[8];
-    int n_valid = 0;
 
     // find solutions for theta1
     if (ik_theta1(x, y, d2, d3, &th1[0], &th1[1])) {
@@ -209,6 +205,22 @@ int ik(float x, float y, float z,
         printf("(%f, %f, %f)\n", solutions[3*i], solutions[3*i+1], solutions[3*i+2]);
     }
 #endif
+
+    return n;
+}
+
+int iksearch_fk(float x, float y, float z,
+                float a1, float a2, float a3, float a4, float d1, float d2, float d3,
+                float *iksolutions)
+{
+    float solutions[24];
+    int i;
+    int n;
+    float px, py, pz;
+    int valid[8];
+    int n_valid = 0;
+
+    n = ik(x, y, z, A1, A2, A3, A4, D1, D2, D3, solutions);
 
     // test for valid solutions
     for (i = 0; i < n; i++) {
@@ -273,7 +285,7 @@ int main(int argc, char *argv[])
                 for (theta3 = 0; theta3 <= 180; theta3++) {
                     fk(A1, A2, A3, A4, theta1, theta2, theta3, D1, D2, D3, &fx, &fy, &fz);
 
-                    if (n = ik(fx, fy, fz, A1, A2, A3, A4, D1, D2, D3, solutions)) {
+                    if (n = iksearch_fk(fx, fy, fz, A1, A2, A3, A4, D1, D2, D3, solutions)) {
                         found = 0;
                         for (i = 0; i < n; i++) {
                             th1ik = round(solutions[3*i]);
