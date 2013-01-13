@@ -138,9 +138,10 @@ def verify_ik():
     theta1 = 180
 
     
-    theta1, theta2, theta3 = -5, -90, 0
-    x, y, z = fk(a1, a2, a3, a4, theta1, theta2, theta3, d1, d2, d3)
-    print(x, y, z)
+    #theta1, theta2, theta3 = -5, -90, 0
+    #x, y, z = fk(a1, a2, a3, a4, theta1, theta2, theta3, d1, d2, d3)
+    #print(x, y, z)
+    x, y ,z = 50, -76, -120
     solutions = ik(x, y, z, a1, a2, a3, a4, d1, d2, d3)
     print (solutions)
 
