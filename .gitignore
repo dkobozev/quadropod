@@ -1,3 +1,9 @@
 *.blend1
 *.blend2
 *.pyc
+*.o
+*.hex
+*.elf
+dependencies
+dependencies_cxx
+*.pyc
