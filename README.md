@@ -36,3 +36,8 @@ Simulator dependencies:
 * Python bindings for GtkGLExt (https://projects.gnome.org/gtkglext/download.html#pygtkglext)
 * NumPy (http://www.numpy.org/)
 
+Literature
+----------
+
+Industrial Robotics: Theory, Modelling and Control (specifically, chapter on forward and inverse kinematics)
+http://www.intechopen.com/books/industrial_robotics_theory_modelling_and_control
