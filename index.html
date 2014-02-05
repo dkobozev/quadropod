@@ -39,14 +39,29 @@
     </header>
 
     <div class="container">
+      <section class="hardware">
+          <h2>Hardware</h2>
 
-      <section class="gallery">
-          <h2>Gallery</h2>
+          <div class="gallery">
+              <a href="images/quadropod/010.jpg"><img src="images/quadropod/thumbnail/010.jpg"></a>
+              <a href="images/quadropod/012.jpg"><img src="images/quadropod/thumbnail/012.jpg"></a>
+              <a href="images/quadropod/013.jpg"><img src="images/quadropod/thumbnail/013.jpg"></a>
+              <a href="images/quadropod/014.jpg"><img src="images/quadropod/thumbnail/014.jpg"></a>
+          </div>
 
-          <a href="images/quadropod/010.jpg"><img src="images/quadropod/thumbnail/010.jpg"></a>
-          <a href="images/quadropod/012.jpg"><img src="images/quadropod/thumbnail/012.jpg"></a>
-          <a href="images/quadropod/013.jpg"><img src="images/quadropod/thumbnail/013.jpg"></a>
-          <a href="images/quadropod/014.jpg"><img src="images/quadropod/thumbnail/014.jpg"></a>
+          <p>All parts were ordered from Lynxmotion (SKU in parentheses).</p>
+
+          <ul>
+              <li>Lynxmotion Tibias 4.25" (ASBT-02) </li>
+              <li>Lynxmotion Aluminum "C" Servo Brackets with Ball Bearings (ASB-09) </li>
+              <li>Lynxmotion Aluminum Multi-Purpose Servo Brackets (ASB-04) </li>
+              <li>Hitec HS-485HB servos with Metal Servo Horns (SCD-01) </li>
+              <li>Quadrapod Body Kit - Mini (QBK-01) </li>
+              <li>Aluminum "L" Connector Brackets (ASB-06) </li>
+              <li>BotBoarduino (BBU-01) </li>
+              <li>6.0 Volt Ni-MH 2800mAh Battery Pack (BAT-05) </li>
+              <li>Wiring Harness (WH-01) </li>
+          </ul>
       </section>
 
       <section class="video">
@@ -54,12 +69,53 @@
           <iframe width="420" height="315" src="http://www.youtube.com/embed/CCVsSq-gLdc" frameborder="0" allowfullscreen></iframe>
       </section>
 
+      <section class="firmware">
+          <h2>Firmware</h2>
+
+          <p>Robot firmware is written in C for the Arduino-based BotBoarduino board and
+            uses a custom Makefile to link, compile and upload the firmware. All robot
+            movements were first simulated in software, then translated into C from Python.</p>
+      </section>
+
       <section class="simulator">
           <h2>Simulator</h2>
+
+          <p>Inverse kinematics simulation in 3D, using Python, PyGTK and PyOpenGL.
+          Simulator dependencies:</p>
+
+          <ul>
+              <li><a href="http://www.python.org/">Python 2.6+</a></li>
+              <li><a href="http://www.pygtk.org/index.html">PyGTK 2.24</a></li>
+              <li><a href="http://pyopengl.sourceforge.net/">PyOpenGL</a></li>
+              <li><a href="https://projects.gnome.org/gtkglext/download.html#pygtkglext">Python bindings for GtkGLExt</a></li>
+              <li><a href="http://www.numpy.org/">NumPy</a></li>
+          </ul>
 
           <a href="images/simulator/simulator001.png"><img src="images/simulator/thumbnail/simulator001.png"></a>
           <a href="images/simulator/simulator002.png"><img src="images/simulator/thumbnail/simulator002.png"></a>
           <a href="images/simulator/simulator003.png"><img src="images/simulator/thumbnail/simulator003.png"></a>
+      </section>
+
+      <section class="resources">
+          <h2>Resources</h2>
+
+          <ul>
+              <li>
+              <a href="http://en.wikipedia.org/wiki/Forward_kinematics">http://en.wikipedia.org/wiki/Forward_kinematics</a>
+              </li>
+              <li>
+              <a href="http://en.wikipedia.org/wiki/Inverse_kinematics">http://en.wikipedia.org/wiki/Inverse_kinematics</a>
+              </li>
+              <li>
+              <a href="http://en.wikipedia.org/wiki/Denavit%E2%80%93Hartenberg_parameters">http://en.wikipedia.org/wiki/Denavit-Hartenberg_parameters</a>
+              </li>
+              <li> <a href="http://www.intechopen.com/books/industrial_robotics_theory_modelling_and_control">Industrial
+              Robotics: Theory, Modelling and Control</a> (specifically, chapter on forward and inverse kinematics)
+              </li>
+              <li>
+              <a href="http://robotics.usc.edu/~aatrash/cs545/Lecture8.pdf">http://robotics.usc.edu/~aatrash/cs545/Lecture8.pdf</a>
+              </li>
+          </ul>
       </section>
 
       <section class="workbook">
