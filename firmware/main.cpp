@@ -202,6 +202,7 @@ int ik(float x, float y, float z,
                             solutions[3*n+1] = th2[k];
                             solutions[3*n+2] = th3[j];
                             n++;
+                            break; // stop after 1 solution
                         }
                     }
                 }
@@ -338,7 +339,7 @@ float hlz = -120;
 void setup()
 {
     int dir, start, min, max;
-    float dt, dz;
+    float dt, dz, raise_h;
     int cycle;
 
     // workaround for delay() bug
@@ -363,10 +364,10 @@ void setup()
     print_xyz(hlx, hly, hlz);
     Serial.println("Setup finished");
 
-    for (cycle = 0; cycle < 6; cycle++) {
+    for (cycle = 0; cycle < 30; cycle++) {
         // shift body left
-        for (t = 0; t <= 90; t++) {
-            dt = t/3.0;
+        for (t = 0; t <= 15; t++) {
+            dt = t*2;
             leg_set_position(0, hrx + dt, hry - dt, hrz);
             leg_set_position(1, frx - dt, fry - dt, frz);
             leg_set_position(2, flx - dt, fly + dt, flz);
@@ -382,46 +383,47 @@ void setup()
         hly += 30;
 
         // raise hr
-        for (t = 0; t <= 90; t++) {
-            dt = t/2.0;
-            dz = sin(M_PI/2 * t/90) * 30;
+        raise_h = 38;
+        for (t = 0; t <= 45; t++) {
+            dt = t;
+            dz = sin(M_PI/2 * t/45) * raise_h;
             leg_set_position(0, hrx - dt, hry, hrz + dz);
         }
         hrx -= 45;
-        hrz += 30;
+        hrz += raise_h;
 
         // lower hr
-        for (t = 0; t <= 90; t++) {
-            dt = t/2.0;
-            dz = (sin(M_PI/2 + M_PI/2 * t/90) - 1) * 30;
+        for (t = 0; t <= 45; t++) {
+            dt = t;
+            dz = (sin(M_PI/2 + M_PI/2 * t/45) - 1) * raise_h;
             leg_set_position(0, hrx - dt, hry, hrz + dz);
             //leg_set_position(2, flx + dt, fly, flz + dz);
             //leg_set_position(3, hlx - dt, hly, hlz + dz);
         }
         hrx -= 45;
-        hrz -= 30;
+        hrz -= raise_h;
 
         // raise fr
-        for (t = 0; t <= 90; t++) {
-            dt = t/2.0;
-            dz = sin(M_PI/2 * t/90) * 30;
-            leg_set_position(1, frx + dt, hry, frz + dz);
+        for (t = 0; t <= 45; t++) {
+            dt = t;
+            dz = sin(M_PI/2 * t/45) * raise_h;
+            leg_set_position(1, frx + dt, fry, frz + dz);
         }
         frx += 45;
-        frz += 30;
+        frz += raise_h;
 
         // lower fr
-        for (t = 0; t <= 90; t++) {
-            dt = t/2.0;
-            dz = (sin(M_PI/2 + M_PI/2 * t/90) - 1) * 30;
-            leg_set_position(1, frx + dt, hry, frz + dz);
+        for (t = 0; t <= 45; t++) {
+            dt = t;
+            dz = (sin(M_PI/2 + M_PI/2 * t/45) - 1) * raise_h;
+            leg_set_position(1, frx + dt, fry, frz + dz);
         }
         frx += 45;
-        frz -= 30;
+        frz -= raise_h;
 
         // shift body right
-        for (t = 0; t <= 90; t++) {
-            dt = t/3.0;
+        for (t = 0; t <= 15; t++) {
+            dt = t*2;
             leg_set_position(0, hrx + dt, hry + dt*2, hrz);
             leg_set_position(1, frx - dt, fry + dt*2, frz);
             leg_set_position(2, flx - dt, fly - dt*2, flz);
@@ -437,44 +439,44 @@ void setup()
         hly -= 60;
 
         // raise hl
-        for (t = 0; t <= 90; t++) {
-            dt = t/2.0;
-            dz = sin(M_PI/2 * t/90) * 30;
+        for (t = 0; t <= 45; t++) {
+            dt = t;
+            dz = sin(M_PI/2 * t/45) * raise_h;
             leg_set_position(3, hlx - dt, hly, hlz + dz);
         }
         hlx -= 45;
-        hlz += 30;
+        hlz += raise_h;
 
         // lower hl
-        for (t = 0; t <= 90; t++) {
-            dt = t/2.0;
-            dz = (sin(M_PI/2 + M_PI/2 * t/90) - 1) * 30;
+        for (t = 0; t <= 45; t++) {
+            dt = t;
+            dz = (sin(M_PI/2 + M_PI/2 * t/45) - 1) * raise_h;
             leg_set_position(3, hlx - dt, hly, hlz + dz);
         }
         hlx -= 45;
-        hlz -= 30;
+        hlz -= raise_h;
 
         // raise fl
-        for (t = 0; t <= 90; t++) {
-            dt = t/2.0;
-            dz = sin(M_PI/2 * t/90) * 30;
+        for (t = 0; t <= 45; t++) {
+            dt = t;
+            dz = sin(M_PI/2 * t/45) * raise_h;
             leg_set_position(2, flx + dt, fly, flz + dz);
         }
         flx += 45;
-        flz += 30;
+        flz += raise_h;
 
         // lower fl
-        for (t = 0; t <= 90; t++) {
-            dt = t/2.0;
-            dz = (sin(M_PI/2 + M_PI/2 * t/90) - 1) * 30;
+        for (t = 0; t <= 45; t++) {
+            dt = t;
+            dz = (sin(M_PI/2 + M_PI/2 * t/45) - 1) * raise_h;
             leg_set_position(2, flx + dt, fly, flz + dz);
         }
         flx += 45;
-        flz -= 30;
+        flz -= raise_h;
 
-        // center body
-        for (t = 0; t <= 90; t++) {
-            dt = t/3.0;
+        // shift body back to center
+        for (t = 0; t <= 15; t++) {
+            dt = t*2;
             leg_set_position(0, hrx + dt, hry - dt, hrz);
             leg_set_position(1, frx - dt, fry - dt, frz);
             leg_set_position(2, flx - dt, fly + dt, flz);

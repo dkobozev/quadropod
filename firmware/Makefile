@@ -18,6 +18,7 @@ VARIANTS       = $(INSTALL_DIR)/hardware/arduino/variants/standard
 ARDUINO_LIB    = $(INSTALL_DIR)/libraries
 AVR_TOOLS_PATH = /usr/bin
 AVRDUDE_PATH   = /usr/bin
+AVRDUDE_CONF   = /etc/avrdude.conf
 
 # Note that if your program has dependencies other than those
 # already listed below, you will need to add them accordingly.
@@ -109,7 +110,7 @@ OBJS_ALL = $(OBJS) $(OBJS_CXX)
 # -----------------------------------------------------------------------------
 
 AVRDUDE_PORT  = $(PORT)
-AVRDUDE_FLAGS = -V -F -C $(INSTALL_DIR)/hardware/tools/avrdude.conf \
+AVRDUDE_FLAGS = -V -F -C $(AVRDUDE_CONF) \
 -p $(MCU) -P $(AVRDUDE_PORT) -c $(AVRDUDE_PROGRAMMER) \
 -b $(UPLOAD_RATE) -D
 
