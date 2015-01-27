@@ -320,32 +320,34 @@ int joint_start_angles[] = {
 
 int t = 0;
 
-float hrx = 50;
-float hry = -76;
+float hrx = 80;
+float hry = -90;
 float hrz = -120;
 
-float frx = 50;
-float fry = -76;
+float frx = 80;
+float fry = -90;
 float frz = -120;
 
-float flx = 50;
-float fly = -76;
+float flx = 80;
+float fly = -90;
 float flz = -120;
 
-float hlx = 50;
-float hly = -76;
+float hlx = 80;
+float hly = -90;
 float hlz = -120;
 
 void setup()
 {
-    int dir, start, min, max;
-    float dt, dz, raise_h;
+    int i, dir, start, min, max;
+    float shift_dx, shift_dy;
+    float sdx, sdy, rdt, rdz;
+    float dt, dz, raise_d, raise_h;
     int cycle;
+    float steps;
 
-    // workaround for delay() bug
-    Serial.begin(9600);
+    Serial.begin(9600); // workaround for delay() bug
 
-    for (int i = 0; i < NUM_JOINTS; i++) {
+    for (i = 0; i < NUM_JOINTS; i++) {
         dir   = joint_settings[i*4];
         start = joint_settings[i*4+1];
         min   = joint_settings[i*4+2];
@@ -357,139 +359,214 @@ void setup()
 
     delay(2000);
 
-    Serial.println("Leg positions:");
-    print_xyz(hrx, hry, hrz);
-    print_xyz(frx, fry, frz);
-    print_xyz(flx, fly, flz);
-    print_xyz(hlx, hly, hlz);
-    Serial.println("Setup finished");
+    shift_dx = 13.75;
+    shift_dy = 15;
+
+    raise_d = 55;
+    raise_h = 38;
+
+    steps = 10.0;
 
     for (cycle = 0; cycle < 30; cycle++) {
-        // shift body left
-        for (t = 0; t <= 15; t++) {
-            dt = t*2;
-            leg_set_position(0, hrx + dt, hry - dt, hrz);
-            leg_set_position(1, frx - dt, fry - dt, frz);
-            leg_set_position(2, flx - dt, fly + dt, flz);
-            leg_set_position(3, hlx + dt, hly + dt, hlz);
-        }
-        hrx += 30;
-        hry -= 30;
-        frx -= 30;
-        fry -= 30;
-        flx -= 30;
-        fly += 30;
-        hlx += 30;
-        hly += 30;
+        // shift body left, raise hr
+        for (t = 0; t <= (int) steps; t++) {
+            sdx = shift_dx * t/steps;
+            sdy = shift_dy * t/steps;
+            rdt = raise_d * t/steps;
+            rdz = raise_h * sin(M_PI/2 * t/steps);
 
-        // raise hr
-        raise_h = 38;
-        for (t = 0; t <= 45; t++) {
-            dt = t;
-            dz = sin(M_PI/2 * t/45) * raise_h;
-            leg_set_position(0, hrx - dt, hry, hrz + dz);
+            leg_set_position(0, hrx+sdx-rdt, hry-sdy, hrz+rdz);
+            leg_set_position(1, frx-sdx,     fry-sdy, frz);
+            leg_set_position(2, flx-sdx,     fly+sdy, flz);
+            leg_set_position(3, hlx+sdx,     hly+sdy, hlz);
         }
-        hrx -= 45;
+
+        hrx += shift_dx;
+        hry -= shift_dy;
+        frx -= shift_dx;
+        fry -= shift_dy;
+        flx -= shift_dx;
+        fly += shift_dy;
+        hlx += shift_dx;
+        hly += shift_dy;
+
+        hrx -= raise_d;
         hrz += raise_h;
 
-        // lower hr
-        for (t = 0; t <= 45; t++) {
-            dt = t;
-            dz = (sin(M_PI/2 + M_PI/2 * t/45) - 1) * raise_h;
-            leg_set_position(0, hrx - dt, hry, hrz + dz);
-            //leg_set_position(2, flx + dt, fly, flz + dz);
-            //leg_set_position(3, hlx - dt, hly, hlz + dz);
+        // shift body left, lower hr
+        for (t = 0; t <= (int) steps; t++) {
+            sdx = shift_dx * t/steps;
+            sdy = shift_dy * t/steps;
+            rdt = raise_d * t/steps;
+            rdz = raise_h * (sin(M_PI/2 + M_PI/2 * t/steps) - 1);
+
+            leg_set_position(0, hrx+sdx-rdt, hry-sdy, hrz+rdz);
+            leg_set_position(1, frx-sdx,     fry-sdy, frz);
+            leg_set_position(2, flx-sdx,     fly+sdy, flz);
+            leg_set_position(3, hlx+sdx,     hly+sdy, hlz);
         }
-        hrx -= 45;
+
+        hrx += shift_dx;
+        hry -= shift_dy;
+        frx -= shift_dx;
+        fry -= shift_dy;
+        flx -= shift_dx;
+        fly += shift_dy;
+        hlx += shift_dx;
+        hly += shift_dy;
+
+        hrx -= raise_d;
         hrz -= raise_h;
 
-        // raise fr
-        for (t = 0; t <= 45; t++) {
-            dt = t;
-            dz = sin(M_PI/2 * t/45) * raise_h;
-            leg_set_position(1, frx + dt, fry, frz + dz);
+        // shift body right, raise fr
+        for (t = 0; t <= (int) steps; t++) {
+            sdx = shift_dx * t/steps;
+            sdy = shift_dy * t/steps;
+            rdt = raise_d * t/steps;
+            rdz = raise_h * sin(M_PI/2 * t/steps);
+
+            leg_set_position(0, hrx+sdx,     hry+sdy, hrz);
+            leg_set_position(1, frx-sdx+rdt, fry+sdy, frz+rdz);
+            leg_set_position(2, flx-sdx,     fly-sdy, flz);
+            leg_set_position(3, hlx+sdx,     hly-sdy, hlz);
         }
-        frx += 45;
+
+        hrx += shift_dx;
+        hry += shift_dy;
+        frx -= shift_dx;
+        fry += shift_dy;
+        flx -= shift_dx;
+        fly -= shift_dy;
+        hlx += shift_dx;
+        hly -= shift_dy;
+
+        frx += raise_d;
         frz += raise_h;
 
-        // lower fr
-        for (t = 0; t <= 45; t++) {
-            dt = t;
-            dz = (sin(M_PI/2 + M_PI/2 * t/45) - 1) * raise_h;
-            leg_set_position(1, frx + dt, fry, frz + dz);
+        // shift body right, lower fr
+        for (t = 0; t <= (int) steps; t++) {
+            sdx = shift_dx * t/steps;
+            sdy = shift_dy * t/steps;
+            rdt = raise_d * t/steps;
+            rdz = raise_h * (sin(M_PI/2 + M_PI/2 * t/steps) - 1);
+
+            leg_set_position(0, hrx+sdx,     hry+sdy, hrz);
+            leg_set_position(1, frx-sdx+rdt, fry+sdy, frz+rdz);
+            leg_set_position(2, flx-sdx,     fly-sdy, flz);
+            leg_set_position(3, hlx+sdx,     hly-sdy, hlz);
         }
-        frx += 45;
+
+        hrx += shift_dx;
+        hry += shift_dy;
+        frx -= shift_dx;
+        fry += shift_dy;
+        flx -= shift_dx;
+        fly -= shift_dy;
+        hlx += shift_dx;
+        hly -= shift_dy;
+
+        frx += raise_d;
         frz -= raise_h;
 
-        // shift body right
-        for (t = 0; t <= 15; t++) {
-            dt = t*2;
-            leg_set_position(0, hrx + dt, hry + dt*2, hrz);
-            leg_set_position(1, frx - dt, fry + dt*2, frz);
-            leg_set_position(2, flx - dt, fly - dt*2, flz);
-            leg_set_position(3, hlx + dt, hly - dt*2, hlz);
-        }
-        hrx += 30;
-        hry += 60;
-        frx -= 30;
-        fry += 60;
-        flx -= 30;
-        fly -= 60;
-        hlx += 30;
-        hly -= 60;
+        // shift body right, raise hl
+        for (t = 0; t <= (int) steps; t++) {
+            sdx = shift_dx * t/steps;
+            sdy = shift_dy * t/steps;
+            rdt = raise_d * t/steps;
+            rdz = raise_h * sin(M_PI/2 * t/steps);
 
-        // raise hl
-        for (t = 0; t <= 45; t++) {
-            dt = t;
-            dz = sin(M_PI/2 * t/45) * raise_h;
-            leg_set_position(3, hlx - dt, hly, hlz + dz);
+            leg_set_position(0, hrx+sdx,     hry+sdy, hrz);
+            leg_set_position(1, frx-sdx,     fry+sdy, frz);
+            leg_set_position(2, flx-sdx,     fly-sdy, flz);
+            leg_set_position(3, hlx+sdx-rdt, hly-sdy, hlz+rdz);
         }
-        hlx -= 45;
+
+        hrx += shift_dx;
+        hry += shift_dy;
+        frx -= shift_dx;
+        fry += shift_dy;
+        flx -= shift_dx;
+        fly -= shift_dy;
+        hlx += shift_dx;
+        hly -= shift_dy;
+
+        hlx -= raise_d;
         hlz += raise_h;
 
-        // lower hl
-        for (t = 0; t <= 45; t++) {
-            dt = t;
-            dz = (sin(M_PI/2 + M_PI/2 * t/45) - 1) * raise_h;
-            leg_set_position(3, hlx - dt, hly, hlz + dz);
+        // shift body right, lower hl
+        for (t = 0; t <= (int) steps; t++) {
+            sdx = shift_dx * t/steps;
+            sdy = shift_dy * t/steps;
+            rdt = raise_d * t/steps;
+            rdz = raise_h * (sin(M_PI/2 + M_PI/2 * t/steps) - 1);
+
+            leg_set_position(0, hrx+sdx,     hry+sdy, hrz);
+            leg_set_position(1, frx-sdx,     fry+sdy, frz);
+            leg_set_position(2, flx-sdx,     fly-sdy, flz);
+            leg_set_position(3, hlx+sdx-rdt, hly-sdy, hlz+rdz);
         }
-        hlx -= 45;
+
+        hrx += shift_dx;
+        hry += shift_dy;
+        frx -= shift_dx;
+        fry += shift_dy;
+        flx -= shift_dx;
+        fly -= shift_dy;
+        hlx += shift_dx;
+        hly -= shift_dy;
+
+        hlx -= raise_d;
         hlz -= raise_h;
 
-        // raise fl
-        for (t = 0; t <= 45; t++) {
-            dt = t;
-            dz = sin(M_PI/2 * t/45) * raise_h;
-            leg_set_position(2, flx + dt, fly, flz + dz);
+        // shift body left, raise fl
+        for (t = 0; t <= (int) steps; t++) {
+            sdx = shift_dx * t/steps;
+            sdy = shift_dy * t/steps;
+            rdt = raise_d * t/steps;
+            rdz = raise_h * sin(M_PI/2 * t/steps);
+
+            leg_set_position(0, hrx+sdx,     hry-sdy, hrz);
+            leg_set_position(1, frx-sdx,     fry-sdy, frz);
+            leg_set_position(2, flx-sdx+rdt, fly+sdy, flz+rdz);
+            leg_set_position(3, hlx+sdx,     hly+sdy, hlz);
         }
-        flx += 45;
+
+        hrx += shift_dx;
+        hry -= shift_dy;
+        frx -= shift_dx;
+        fry -= shift_dy;
+        flx -= shift_dx;
+        fly += shift_dy;
+        hlx += shift_dx;
+        hly += shift_dy;
+
+        flx += raise_d;
         flz += raise_h;
 
-        // lower fl
-        for (t = 0; t <= 45; t++) {
-            dt = t;
-            dz = (sin(M_PI/2 + M_PI/2 * t/45) - 1) * raise_h;
-            leg_set_position(2, flx + dt, fly, flz + dz);
-        }
-        flx += 45;
-        flz -= raise_h;
+        // shift body left, lower fl
+        for (t = 0; t <= (int) steps; t++) {
+            sdx = shift_dx * t/steps;
+            sdy = shift_dy * t/steps;
+            rdt = raise_d * t/steps;
+            rdz = raise_h * (sin(M_PI/2 + M_PI/2 * t/steps) - 1);
 
-        // shift body back to center
-        for (t = 0; t <= 15; t++) {
-            dt = t*2;
-            leg_set_position(0, hrx + dt, hry - dt, hrz);
-            leg_set_position(1, frx - dt, fry - dt, frz);
-            leg_set_position(2, flx - dt, fly + dt, flz);
-            leg_set_position(3, hlx + dt, hly + dt, hlz);
+            leg_set_position(0, hrx+sdx,     hry-sdy, hrz);
+            leg_set_position(1, frx-sdx,     fry-sdy, frz);
+            leg_set_position(2, flx-sdx+rdt, fly+sdy, flz+rdz);
+            leg_set_position(3, hlx+sdx,     hly+sdy, hlz);
         }
-        hrx += 30;
-        hry -= 30;
-        frx -= 30;
-        fry -= 30;
-        flx -= 30;
-        fly += 30;
-        hlx += 30;
-        hly += 30;
+
+        hrx += shift_dx;
+        hry -= shift_dy;
+        frx -= shift_dx;
+        fry -= shift_dy;
+        flx -= shift_dx;
+        fly += shift_dy;
+        hlx += shift_dx;
+        hly += shift_dy;
+
+        flx += raise_d;
+        flz -= raise_h;
 
         Serial.print("End of cycle "); Serial.println(cycle);
     }

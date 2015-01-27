@@ -114,27 +114,29 @@ class Quadropod (Robot):
       
   def run(self):
     print 'hello!'
-    self.stance()
+    self.stance3()
 
     while True:
-      self.walk()
+      self.walk3()
       
   def stance(self):
-    self.front_left0.setVelocity(2)
-    self.front_left1.setVelocity(2)
-    self.front_left2.setVelocity(2)
+    velocity = 10
+
+    self.front_left0.setVelocity(velocity)
+    self.front_left1.setVelocity(velocity)
+    self.front_left2.setVelocity(velocity)
     
-    self.front_right0.setVelocity(2)
-    self.front_right1.setVelocity(2)
-    self.front_right2.setVelocity(2)
+    self.front_right0.setVelocity(velocity)
+    self.front_right1.setVelocity(velocity)
+    self.front_right2.setVelocity(velocity)
     
-    self.hind_right0.setVelocity(2)
-    self.hind_right1.setVelocity(2)
-    self.hind_right2.setVelocity(2)
+    self.hind_right0.setVelocity(velocity)
+    self.hind_right1.setVelocity(velocity)
+    self.hind_right2.setVelocity(velocity)
     
-    self.hind_left0.setVelocity(2)
-    self.hind_left1.setVelocity(2)
-    self.hind_left2.setVelocity(2)
+    self.hind_left0.setVelocity(velocity)
+    self.hind_left1.setVelocity(velocity)
+    self.hind_left2.setVelocity(velocity)
 
     start = self.ik(50, -76, -100)
     #start = (0, 0, 0)
@@ -142,15 +144,48 @@ class Quadropod (Robot):
     self.set_angles('front_right', *start)
     self.set_angles('hind_right', *start)
     self.set_angles('hind_left', *start)
-    self.wait(3)
+    self.wait(1)
     
     start = self.ik(50, -76, -120)
     self.set_angles('front_left', *start)
     self.set_angles('front_right', *start)
     self.set_angles('hind_right', *start)
     self.set_angles('hind_left', *start)
-    self.wait(3)
-  
+    self.wait(1)
+    
+  def stance3(self):
+    velocity = 10
+
+    self.front_left0.setVelocity(velocity)
+    self.front_left1.setVelocity(velocity)
+    self.front_left2.setVelocity(velocity)
+
+    self.front_right0.setVelocity(velocity)
+    self.front_right1.setVelocity(velocity)
+    self.front_right2.setVelocity(velocity)
+
+    self.hind_right0.setVelocity(velocity)
+    self.hind_right1.setVelocity(velocity)
+    self.hind_right2.setVelocity(velocity)
+
+    self.hind_left0.setVelocity(velocity)
+    self.hind_left1.setVelocity(velocity)
+    self.hind_left2.setVelocity(velocity)
+
+    start = self.ik(80, -90, -100)
+    self.set_angles('front_left', *start)
+    self.set_angles('front_right', *start)
+    self.set_angles('hind_right', *start)
+    self.set_angles('hind_left', *start)
+    self.wait(1)
+
+    start = self.ik(80, -90, -120)
+    self.set_angles('front_left', *start)
+    self.set_angles('front_right', *start)
+    self.set_angles('hind_right', *start)
+    self.set_angles('hind_left', *start)
+    self.wait(1)
+
   def walk(self):
     hrx = 50
     hry = -76
@@ -167,15 +202,22 @@ class Quadropod (Robot):
     hlx = 50
     hly = -76
     hlz = -120
+    
+    shift_steps = 10
+    shift_factor = 30 / shift_steps
+        
+    raise_steps = 10
+    t_factor = 45 / raise_steps
+    raise_h = 38
+    raise_wait = 0.02
 
     print 'shift body left'
-    
-    for t in range(1, 16):
-      dt = t*2
-      self.set_angles('hind_right', *self.ik(hrx+dt, hry-dt, hrz))
+    for t in range(1, shift_steps + 1):
+      dt = t*shift_factor
+      self.set_angles('hind_right',  *self.ik(hrx+dt, hry-dt, hrz))
       self.set_angles('front_right', *self.ik(frx-dt, fry-dt, frz))
-      self.set_angles('front_left', *self.ik(flx-dt, fly+dt, flz))
-      self.set_angles('hind_left', *self.ik(hlx+dt, hly+dt, hlz))
+      self.set_angles('front_left',  *self.ik(flx-dt, fly+dt, flz))
+      self.set_angles('hind_left',   *self.ik(hlx+dt, hly+dt, hlz))
       self.wait(0.02)
 
     hrx += 30
@@ -188,57 +230,55 @@ class Quadropod (Robot):
     hly += 30
    
     print 'raise hr'
-
-    raise_h = 38
-    for t in range(1, 46):
-      dt = t
-      dz = math.sin(math.pi/2 * t/45) * raise_h
+    for t in range(1, raise_steps + 1):
+      dt = t*t_factor
+      dz = math.sin(math.pi/2 * t/raise_steps) * raise_h
       self.set_angles('hind_right', *self.ik(hrx-dt, hry, hrz+dz))
-      self.wait(0.02)
+      self.wait(raise_wait)
 
     hrx -= 45
     hrz += raise_h
 
     print 'lower hr'
-    for t in range(1, 46):
-      dt = t
-      dz = (math.sin(math.pi/2 + math.pi/2 * t/45) - 1) * raise_h
+    for t in range(1, raise_steps + 1):
+      dt = t*t_factor
+      dz = (math.sin(math.pi/2 + math.pi/2 * t/raise_steps) - 1) * raise_h
       self.set_angles('hind_right', *self.ik(hrx-dt, hry, hrz+dz))
-      self.wait(0.02)
+      self.wait(raise_wait)
 
     hrx -= 45
     hrz -= raise_h
+    self.wait(0.02)
 
     print 'raise fr'
-    for t in range(1, 46):
-      dt = t
-      dz = math.sin(math.pi/2 * t/45) * raise_h
+    for t in range(1, raise_steps + 1):
+      dt = t*t_factor
+      dz = math.sin(math.pi/2 * t/raise_steps) * raise_h
       self.set_angles('front_right', *self.ik(frx+dt, fry, frz+dz))
-      self.wait(0.02)
+      self.wait(raise_wait)
 
     frx += 45
     frz += raise_h
 
     print 'lower fr'
-    for t in range(1, 46):
-      dt = t
-      dz = (math.sin(math.pi/2 + math.pi/2 * t/45) - 1) * raise_h
+    for t in range(1, raise_steps + 1):
+      dt = t*t_factor
+      dz = (math.sin(math.pi/2 + math.pi/2 * t/raise_steps) - 1) * raise_h
       self.set_angles('front_right', *self.ik(frx+dt, fry, frz+dz))
-      self.wait(0.02)
+      self.wait(raise_wait)
 
     frx += 45
     frz -= raise_h
-   
     self.wait(0.2)
 
     print 'shift body right'
 
-    for t in range(1, 16):
-      dt = t*2
-      self.set_angles('hind_right', *self.ik(hrx+dt, hry+dt*2, hrz))
+    for t in range(1, shift_steps + 1):
+      dt = t*shift_factor
+      self.set_angles('hind_right',  *self.ik(hrx+dt, hry+dt*2, hrz))
       self.set_angles('front_right', *self.ik(frx-dt, fry+dt*2, frz))
-      self.set_angles('front_left', *self.ik(flx-dt, fly-dt*2, flz))
-      self.set_angles('hind_left', *self.ik(hlx+dt, hly-dt*2, hlz))
+      self.set_angles('front_left',  *self.ik(flx-dt, fly-dt*2, flz))
+      self.set_angles('hind_left',   *self.ik(hlx+dt, hly-dt*2, hlz))
       self.wait(0.02)
 
     hrx += 30
@@ -249,57 +289,59 @@ class Quadropod (Robot):
     fly -= 60
     hlx += 30
     hly -= 60
-    
+
     self.wait(0.2)
 
     print 'raise hl'
 
-    for t in range(1, 46):
-      dt =t
-      dz = math.sin(math.pi/2 * t/45) * raise_h
+    for t in range(1, raise_steps + 1):
+      dt =t*t_factor
+      dz = math.sin(math.pi/2 * t/raise_steps) * raise_h
       self.set_angles('hind_left', *self.ik(hlx-dt, hly, hlz+dz))
-      self.wait(0.02)
+      self.wait(raise_wait)
 
     hlx -= 45
     hlz += raise_h
 
     print 'lower hl'
-    for t in range(1, 46):
-        dt = t
-        dz = (math.sin(math.pi/2 + math.pi/2 * t/45) - 1) * raise_h
+    for t in range(1, raise_steps + 1):
+        dt = t*t_factor
+        dz = (math.sin(math.pi/2 + math.pi/2 * t/raise_steps) - 1) * raise_h
         self.set_angles('hind_left', *self.ik(hlx-dt, hly, hlz+dz))
-        self.wait(0.02)
+        self.wait(raise_wait)
 
     hlx -= 45
     hlz -= raise_h
+    self.wait(0.02)
 
     print 'raise fl'
-    for t in range(1, 46):
-      dt = t
-      dz = math.sin(math.pi/2 * t/45) * raise_h
+    for t in range(1, raise_steps + 1):
+      dt = t*t_factor
+      dz = math.sin(math.pi/2 * t/raise_steps) * raise_h
       self.set_angles('front_left', *self.ik(flx+dt, fly, flz+dz))
-      self.wait(0.02)
+      self.wait(raise_wait)
 
     flx += 45
     flz += raise_h
 
     print 'lower fl'
-    for t in range(1, 46):
-      dt = t
-      dz = (math.sin(math.pi/2 + math.pi/2 * t/45) - 1) * raise_h
+    for t in range(1, raise_steps + 1):
+      dt = t*t_factor
+      dz = (math.sin(math.pi/2 + math.pi/2 * t/raise_steps) - 1) * raise_h
       self.set_angles('front_left', *self.ik(flx+dt, fly, flz+dz))
-      self.wait(0.02)
+      self.wait(raise_wait)
 
     flx += 45
     flz -= raise_h
+    self.wait(0.02)
 
     print 'shift body back to center'
-    for t in range(1, 16):
-      dt = t*2
-      self.set_angles('hind_right', *self.ik(hrx+dt, hry-dt, hrz))
+    for t in range(1, shift_steps + 1):
+      dt = t*shift_factor
+      self.set_angles('hind_right',  *self.ik(hrx+dt, hry-dt, hrz))
       self.set_angles('front_right', *self.ik(frx-dt, fry-dt, frz))
-      self.set_angles('front_left', *self.ik(flx-dt, fly+dt, flz))
-      self.set_angles('hind_left', *self.ik(hlx+dt, hly+dt, hlz))
+      self.set_angles('front_left',  *self.ik(flx-dt, fly+dt, flz))
+      self.set_angles('hind_left',   *self.ik(hlx+dt, hly+dt, hlz))
       self.wait(0.02)
 
     hrx += 30
@@ -310,7 +352,445 @@ class Quadropod (Robot):
     fly += 30
     hlx += 30
     hly += 30
+    
+  def walk2(self):
+    hrx = 50
+    hry = -76
+    hrz = -120
 
+    frx = 50
+    fry = -76
+    frz = -120
+
+    flx = 50
+    fly = -76
+    flz = -120
+
+    hlx = 50
+    hly = -76
+    hlz = -120
+    
+    x_distance = 40
+    raise_steps = 10
+    t_factor = x_distance / raise_steps
+    raise_h = 25
+    raise_wait = 0.02
+    
+    shift_distance = x_distance / 2
+    shift_steps = 10
+    shift_factor = shift_distance / shift_steps
+    
+    print 'raise fr'
+    for t in range(1, raise_steps + 1):
+      dt = t*t_factor
+      dz = math.sin(math.pi/2 * t/raise_steps) * raise_h
+      self.set_angles('front_right', *self.ik(frx+dt, fry, frz+dz))
+      self.wait(raise_wait)
+
+    frx += x_distance
+    frz += raise_h
+
+    print 'lower fr'
+    for t in range(1, raise_steps + 1):
+      dt = t*t_factor
+      dz = (math.sin(math.pi/2 + math.pi/2 * t/raise_steps) - 1) * raise_h
+      self.set_angles('front_right', *self.ik(frx+dt, fry, frz+dz))
+      self.wait(raise_wait)
+
+    frx += x_distance
+    frz -= raise_h
+    
+    self.wait(0.02)
+    
+    print 'raise hl'
+    for t in range(1, raise_steps + 1):
+      dt =t*t_factor
+      dz = math.sin(math.pi/2 * t/raise_steps) * raise_h
+      self.set_angles('hind_left', *self.ik(hlx-dt, hly, hlz+dz))
+      self.wait(raise_wait)
+
+    hlx -= x_distance
+    hlz += raise_h
+
+    print 'lower hl'
+    for t in range(1, raise_steps + 1):
+        dt = t*t_factor
+        dz = (math.sin(math.pi/2 + math.pi/2 * t/raise_steps) - 1) * raise_h
+        self.set_angles('hind_left', *self.ik(hlx-dt, hly, hlz+dz))
+        self.wait(raise_wait)
+
+    hlx -= x_distance
+    hlz -= raise_h
+    
+    self.wait(0.02)
+
+    print 'shift body forward'
+    for t in range(1, shift_steps + 1):
+      dt = t*shift_factor
+      self.set_angles('hind_right',  *self.ik(hrx+dt, hry, hrz))
+      self.set_angles('front_right', *self.ik(frx-dt, fry, frz))
+      self.set_angles('front_left',  *self.ik(flx-dt, fly, flz))
+      self.set_angles('hind_left',   *self.ik(hlx+dt, hly, hlz))
+      self.wait(0.02)
+      
+    hrx += shift_distance
+    frx -= shift_distance
+    flx -= shift_distance
+    hlx += shift_distance
+    
+    self.wait(0.02)
+        
+    print 'shift body forward'
+    for t in range(1, shift_steps + 1):
+      dt = t*shift_factor
+      self.set_angles('hind_right',  *self.ik(hrx+dt, hry, hrz))
+      self.set_angles('front_right', *self.ik(frx-dt, fry, frz))
+      self.set_angles('front_left',  *self.ik(flx-dt, fly, flz))
+      self.set_angles('hind_left',   *self.ik(hlx+dt, hly, hlz))
+      self.wait(0.02)
+      
+    hrx += shift_distance
+    frx -= shift_distance
+    flx -= shift_distance
+    hlx += shift_distance
+    
+    self.wait(0.02)
+    
+    sys.exit(0)
+        
+    print 'raise fl'
+    for t in range(1, raise_steps + 1):
+      dt = t*t_factor
+      dz = math.sin(math.pi/2 * t/raise_steps) * raise_h
+      self.set_angles('front_left', *self.ik(flx+dt, fly, flz+dz))
+      self.wait(raise_wait)
+
+    flx += x_distance
+    flz += raise_h
+
+    print 'lower fl'
+    for t in range(1, raise_steps + 1):
+      dt = t*t_factor
+      dz = (math.sin(math.pi/2 + math.pi/2 * t/raise_steps) - 1) * raise_h
+      self.set_angles('front_left', *self.ik(flx+dt, fly, flz+dz))
+      self.wait(raise_wait)
+
+    flx += x_distance
+    flz -= raise_h
+    self.wait(0.02)
+
+    
+    print 'shift body forward'
+
+    for t in range(1, shift_steps + 1):
+      dt = t*shift_factor
+      self.set_angles('hind_right',  *self.ik(hrx+dt, hry, hrz))
+      self.set_angles('front_right', *self.ik(frx-dt, fry, frz))
+      self.set_angles('front_left',  *self.ik(flx-dt, fly, flz))
+      self.set_angles('hind_left',   *self.ik(hlx+dt, hly, hlz))
+      self.wait(0.02)
+      
+    hrx += shift_distance
+    frx -= shift_distance
+    flx -= shift_distance
+    hlx += shift_distance
+    
+    self.wait(0.02)
+            
+    print 'shift body forward'
+
+    for t in range(1, shift_steps + 1):
+      dt = t*shift_factor
+      self.set_angles('hind_right',  *self.ik(hrx+dt, hry, hrz))
+      self.set_angles('front_right', *self.ik(frx-dt, fry, frz))
+      self.set_angles('front_left',  *self.ik(flx-dt, fly, flz))
+      self.set_angles('hind_left',   *self.ik(hlx+dt, hly, hlz))
+      self.wait(0.02)
+      
+    hrx += shift_distance
+    frx -= shift_distance
+    flx -= shift_distance
+    hlx += shift_distance
+    
+    self.wait(0.02)
+
+    print 'raise hr'
+    for t in range(1, raise_steps + 1):
+      dt = t*t_factor
+      dz = math.sin(math.pi/2 * t/raise_steps) * raise_h
+      self.set_angles('hind_right', *self.ik(hrx-dt, hry, hrz+dz))
+      self.wait(raise_wait)
+
+    hrx -= x_distance
+    hrz += raise_h
+
+    print 'lower hr'
+    for t in range(1, raise_steps + 1):
+      dt = t*t_factor
+      dz = (math.sin(math.pi/2 + math.pi/2 * t/raise_steps) - 1) * raise_h
+      self.set_angles('hind_right', *self.ik(hrx-dt, hry, hrz+dz))
+      self.wait(raise_wait)
+
+    hrx -= x_distance
+    hrz -= raise_h
+    self.wait(0.02)
+    
+  def walk3(self):
+    hrx = 80
+    hry = -90
+    hrz = -120
+
+    frx = 80
+    fry = -90
+    frz = -120
+
+    flx = 80
+    fly = -90
+    flz = -120
+
+    hlx = 80
+    hly = -90
+    hlz = -120
+
+    shift_dx = 13.75
+    shift_dy = 15
+
+    raise_d = 55
+    raise_h = 38
+    step_wait = 0.02
+
+    print 'shift body left, raise hr'
+    steps = 10
+    for t in range(1, steps + 1):
+      sdx = shift_dx * t/steps
+      sdy = shift_dy * t/steps
+      rdt = raise_d * t/steps
+      rdz = raise_h * math.sin(math.pi/2 * t/steps)
+
+      self.set_angles('hind_right',  *self.ik(hrx+sdx-rdt, hry-sdy, hrz+rdz))
+      self.set_angles('front_right', *self.ik(frx-sdx,     fry-sdy, frz))
+      self.set_angles('front_left',  *self.ik(flx-sdx,     fly+sdy, flz))
+      self.set_angles('hind_left',   *self.ik(hlx+sdx,     hly+sdy, hlz))
+
+      self.wait(step_wait)
+
+    hrx += shift_dx
+    hry -= shift_dy
+    frx -= shift_dx
+    fry -= shift_dy
+    flx -= shift_dx
+    fly += shift_dy
+    hlx += shift_dx
+    hly += shift_dy
+
+    hrx -= raise_d
+    hrz += raise_h
+
+    print 'shift body left, lower hr'
+    steps = 10
+    for t in range(1, steps + 1):
+      sdx = shift_dx * t/steps
+      sdy = shift_dy * t/steps
+      rdt = raise_d * t/steps
+      rdz = raise_h * (math.sin(math.pi/2 + math.pi/2 * t/steps) - 1)
+
+      self.set_angles('hind_right',  *self.ik(hrx+sdx-rdt, hry-sdy, hrz+rdz))
+      self.set_angles('front_right', *self.ik(frx-sdx,     fry-sdy, frz))
+      self.set_angles('front_left',  *self.ik(flx-sdx,     fly+sdy, flz))
+      self.set_angles('hind_left',   *self.ik(hlx+sdx,     hly+sdy, hlz))
+
+      self.wait(step_wait)
+
+    hrx += shift_dx
+    hry -= shift_dy
+    frx -= shift_dx
+    fry -= shift_dy
+    flx -= shift_dx
+    fly += shift_dy
+    hlx += shift_dx
+    hly += shift_dy
+
+    hrx -= raise_d
+    hrz -= raise_h
+
+    print 'shift body right, raise fr'
+    steps = 10
+    for t in range(1, steps + 1):
+      sdx = shift_dx * t/steps
+      sdy = shift_dy * t/steps
+      rdt = raise_d * t/steps
+      rdz = raise_h * math.sin(math.pi/2 * t/steps)
+
+      self.set_angles('hind_right',  *self.ik(hrx+sdx,     hry+sdy, hrz))
+      self.set_angles('front_right', *self.ik(frx-sdx+rdt, fry+sdy, frz+rdz))
+      self.set_angles('front_left',  *self.ik(flx-sdx,     fly-sdy, flz))
+      self.set_angles('hind_left',   *self.ik(hlx+sdx,     hly-sdy, hlz))
+
+      self.wait(step_wait)
+
+    hrx += shift_dx
+    hry += shift_dy
+    frx -= shift_dx
+    fry += shift_dy
+    flx -= shift_dx
+    fly -= shift_dy
+    hlx += shift_dx
+    hly -= shift_dy
+
+    frx += raise_d
+    frz += raise_h
+
+    print 'shift body right, lower fr'
+    steps = 10
+    for t in range(1, steps + 1):
+      sdx = shift_dx * t/steps
+      sdy = shift_dy * t/steps
+      rdt = raise_d * t/steps
+      rdz = raise_h * (math.sin(math.pi/2 + math.pi/2 * t/steps) - 1)
+
+      self.set_angles('hind_right',  *self.ik(hrx+sdx,     hry+sdy, hrz))
+      self.set_angles('front_right', *self.ik(frx-sdx+rdt, fry+sdy, frz+rdz))
+      self.set_angles('front_left',  *self.ik(flx-sdx,     fly-sdy, flz))
+      self.set_angles('hind_left',   *self.ik(hlx+sdx,     hly-sdy, hlz))
+
+      self.wait(step_wait)
+
+    hrx += shift_dx
+    hry += shift_dy
+    frx -= shift_dx
+    fry += shift_dy
+    flx -= shift_dx
+    fly -= shift_dy
+    hlx += shift_dx
+    hly -= shift_dy
+
+    frx += raise_d
+    frz -= raise_h
+
+    print 'shift body right, raise hl'
+    steps = 10
+    for t in range(1, steps + 1):
+      sdx = shift_dx * t/steps
+      sdy = shift_dy * t/steps
+      rdt = raise_d * t/steps
+      rdz = raise_h * math.sin(math.pi/2 * t/steps)
+
+      self.set_angles('hind_right',  *self.ik(hrx+sdx,     hry+sdy, hrz))
+      self.set_angles('front_right', *self.ik(frx-sdx,     fry+sdy, frz))
+      self.set_angles('front_left',  *self.ik(flx-sdx,     fly-sdy, flz))
+      self.set_angles('hind_left',   *self.ik(hlx+sdx-rdt, hly-sdy, hlz+rdz))
+
+      self.wait(step_wait)
+
+    hrx += shift_dx
+    hry += shift_dy
+    frx -= shift_dx
+    fry += shift_dy
+    flx -= shift_dx
+    fly -= shift_dy
+    hlx += shift_dx
+    hly -= shift_dy
+
+    hlx -= raise_d
+    hlz += raise_h
+
+    print 'shift body right, lower hl'
+    for t in range(1, steps + 1):
+      sdx = shift_dx * t/steps
+      sdy = shift_dy * t/steps
+      rdt = raise_d * t/steps
+      rdz = raise_h * (math.sin(math.pi/2 + math.pi/2 * t/steps) - 1)
+
+      self.set_angles('hind_right',  *self.ik(hrx+sdx,     hry+sdy, hrz))
+      self.set_angles('front_right', *self.ik(frx-sdx,     fry+sdy, frz))
+      self.set_angles('front_left',  *self.ik(flx-sdx,     fly-sdy, flz))
+      self.set_angles('hind_left',   *self.ik(hlx+sdx-rdt, hly-sdy, hlz+rdz))
+
+      self.wait(step_wait)
+
+    hrx += shift_dx
+    hry += shift_dy
+    frx -= shift_dx
+    fry += shift_dy
+    flx -= shift_dx
+    fly -= shift_dy
+    hlx += shift_dx
+    hly -= shift_dy
+
+    hlx -= raise_d
+    hlz -= raise_h
+
+    print 'shift body left, raise fl'
+    steps = 10
+    for t in range(1, steps + 1):
+      sdx = shift_dx * t/steps
+      sdy = shift_dy * t/steps
+      rdt = raise_d * t/steps
+      rdz = raise_h * math.sin(math.pi/2 * t/steps)
+
+      self.set_angles('hind_right',  *self.ik(hrx+sdx,     hry-sdy, hrz))
+      self.set_angles('front_right', *self.ik(frx-sdx,     fry-sdy, frz))
+      self.set_angles('front_left',  *self.ik(flx-sdx+rdt, fly+sdy, flz+rdz))
+      self.set_angles('hind_left',   *self.ik(hlx+sdx,     hly+sdy, hlz))
+
+      self.wait(step_wait)
+
+    hrx += shift_dx
+    hry -= shift_dy
+    frx -= shift_dx
+    fry -= shift_dy
+    flx -= shift_dx
+    fly += shift_dy
+    hlx += shift_dx
+    hly += shift_dy
+
+    flx += raise_d
+    flz += raise_h
+
+    print 'shift body left, lower fl'
+    steps = 10
+    for t in range(1, steps + 1):
+      sdx = shift_dx * t/steps
+      sdy = shift_dy * t/steps
+      rdt = raise_d * t/steps
+      rdz = raise_h * (math.sin(math.pi/2 + math.pi/2 * t/steps) - 1)
+
+      self.set_angles('hind_right',  *self.ik(hrx+sdx,     hry-sdy, hrz))
+      self.set_angles('front_right', *self.ik(frx-sdx,     fry-sdy, frz))
+      self.set_angles('front_left',  *self.ik(flx-sdx+rdt, fly+sdy, flz+rdz))
+      self.set_angles('hind_left',   *self.ik(hlx+sdx,     hly+sdy, hlz))
+
+      self.wait(step_wait)
+
+    hrx += shift_dx
+    hry -= shift_dy
+    frx -= shift_dx
+    fry -= shift_dy
+    flx -= shift_dx
+    fly += shift_dy
+    hlx += shift_dx
+    hly += shift_dy
+
+    flx += raise_d
+    flz -= raise_h
+
+    #print 'shift body forward'
+    #steps = 10
+    #shift_dx = 25
+    #for t in range(1, steps + 1):
+    #  sdx = shift_dx * t/steps
+    #
+    #  self.set_angles('hind_right',  *self.ik(hrx+sdx, hry, hrz))
+    #  self.set_angles('front_right', *self.ik(frx-sdx, fry, frz))
+    #  self.set_angles('front_left',  *self.ik(flx-sdx, fly, flz))
+    #  self.set_angles('hind_left',   *self.ik(hlx+sdx, hly, hlz))
+    #
+    #  self.wait(step_wait)
+    #
+    #hrx += shift_dx
+    #frx -= shift_dx
+    #flx -= shift_dx
+    #hlx += shift_dx
 
 # The main program starts from here
 

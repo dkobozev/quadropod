@@ -8,8 +8,8 @@ WorldInfo {
   ]
 }
 Viewpoint {
-  orientation 0.0672385 0.991707 0.109531 4.23532
-  position -0.552714 0.278521 -0.279062
+  orientation 0.0783663 0.862663 0.499672 3.41056
+  position -0.16379 0.879261 -0.468463
 }
 Background {
   skyColor [
@@ -10506,6 +10506,8 @@ Robot {
                               ]
                             }
                             physics Physics {
+                              density -1
+                              mass 0.05
                             }
                           }
                         }
@@ -10541,6 +10543,8 @@ Robot {
                     ]
                   }
                   physics Physics {
+                    density -1
+                    mass 0.05
                   }
                 }
               }
@@ -10568,6 +10572,8 @@ Robot {
           ]
         }
         physics Physics {
+          density -1
+          mass 0.05
         }
       }
     }
@@ -18415,6 +18421,8 @@ Robot {
                               ]
                             }
                             physics Physics {
+                              density -1
+                              mass 0.05
                             }
                           }
                         }
@@ -18444,6 +18452,8 @@ Robot {
                     ]
                   }
                   physics Physics {
+                    density -1
+                    mass 0.05
                   }
                 }
               }
@@ -18467,6 +18477,8 @@ Robot {
           ]
         }
         physics Physics {
+          density -1
+          mass 0.05
         }
       }
     }
@@ -18563,6 +18575,8 @@ Robot {
                               ]
                             }
                             physics Physics {
+                              density -1
+                              mass 0.05
                             }
                           }
                         }
@@ -18592,6 +18606,8 @@ Robot {
                     ]
                   }
                   physics Physics {
+                    density -1
+                    mass 0.05
                   }
                 }
               }
@@ -18615,6 +18631,8 @@ Robot {
           ]
         }
         physics Physics {
+          density -1
+          mass 0.05
         }
       }
     }
@@ -18711,6 +18729,8 @@ Robot {
                               ]
                             }
                             physics Physics {
+                              density -1
+                              mass 0.05
                             }
                           }
                         }
@@ -18740,6 +18760,8 @@ Robot {
                     ]
                   }
                   physics Physics {
+                    density -1
+                    mass 0.05
                   }
                 }
               }
@@ -18763,13 +18785,15 @@ Robot {
           ]
         }
         physics Physics {
+          density -1
+          mass 0.05
         }
       }
     }
   ]
   physics Physics {
     density -1
-    mass 0.5
+    mass 2
     centerOfMass [
       0 0.025 0
     ]
