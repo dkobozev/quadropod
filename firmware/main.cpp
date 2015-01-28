@@ -320,21 +320,21 @@ int joint_start_angles[] = {
 
 int t = 0;
 
-float hrx = 80;
-float hry = -90;
-float hrz = -120;
+float hrx = 70;
+float hry = -80;
+float hrz = -130;
 
-float frx = 80;
-float fry = -90;
-float frz = -120;
+float frx = 70;
+float fry = -80;
+float frz = -130;
 
-float flx = 80;
-float fly = -90;
-float flz = -120;
+float flx = 70;
+float fly = -80;
+float flz = -130;
 
-float hlx = 80;
-float hly = -90;
-float hlz = -120;
+float hlx = 70;
+float hly = -80;
+float hlz = -130;
 
 void setup()
 {
@@ -363,7 +363,7 @@ void setup()
     shift_dy = 15;
 
     raise_d = 55;
-    raise_h = 38;
+    raise_h = 34;
 
     steps = 10.0;
 
