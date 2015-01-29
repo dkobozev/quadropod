@@ -115,9 +115,8 @@ class Quadropod (Robot):
   def run(self):
     print 'hello!'
     self.stance3()
-
-    while True:
-      self.walk3()
+    
+    self.strafe_left()
       
   def stance(self):
     velocity = 10
@@ -773,7 +772,7 @@ class Quadropod (Robot):
 
     flx += raise_d
     flz -= raise_h
-
+    
     #print 'shift body forward'
     #steps = 10
     #shift_dx = 25
@@ -791,6 +790,191 @@ class Quadropod (Robot):
     #frx -= shift_dx
     #flx -= shift_dx
     #hlx += shift_dx
+
+  def turn_left(self):
+    hrx = 80
+    hry = -90
+    hrz = -120
+
+    frx = 80
+    fry = -90
+    frz = -120
+
+    flx = 80
+    fly = -90
+    flz = -120
+
+    hlx = 80
+    hly = -90
+    hlz = -120
+
+    angle = 30
+    raise_h = 38
+    step_wait = 0.04
+
+    print 'turning left'
+    steps = 10
+    theta1, theta2, theta3 = self.ik(hrx, hry, hrz)
+    for t in range(1, steps + 1):
+       dt = t * angle/steps
+
+       self.set_angles('hind_right',  theta1+dt, theta2, theta3)
+       self.set_angles('front_right', theta1-dt, theta2, theta3)
+       self.set_angles('front_left',  theta1+dt, theta2, theta3)
+       self.set_angles('hind_left',   theta1-dt, theta2, theta3)
+
+       self.wait(step_wait)
+
+    self.wait(step_wait)
+
+    print 'readjust hr'
+    steps = 10
+    for t in range(1, steps + 1):
+       dt = t * angle/steps
+       rdz = raise_h * math.sin(math.pi * t/steps)
+
+       theta1, theta2, theta3 = self.ik(hrx, hry, hrz+rdz)
+       self.set_angles('hind_right', theta1+angle-dt, theta2, theta3)
+
+       self.wait(step_wait)
+
+    self.wait(step_wait)
+
+    print 'readjust fr'
+    steps = 10
+    for t in range(1, steps + 1):
+       dt = t * angle/steps
+       rdz = raise_h * math.sin(math.pi * t/steps)
+
+       theta1, theta2, theta3 = self.ik(hrx, hry, hrz+rdz)
+       self.set_angles('front_right', theta1-angle+dt, theta2, theta3)
+
+       self.wait(step_wait)
+
+    self.wait(step_wait)
+
+    print 'readjust fl'
+    steps = 10
+    for t in range(1, steps + 1):
+       dt = t * angle/steps
+       rdz = raise_h * math.sin(math.pi * t/steps)
+
+       theta1, theta2, theta3 = self.ik(hrx, hry, hrz+rdz)
+       self.set_angles('front_left', theta1+angle-dt, theta2, theta3)
+
+       self.wait(step_wait)
+
+    self.wait(step_wait)
+
+    print 'readjust hl'
+    steps = 10
+    for t in range(1, steps + 1):
+       dt = t * angle/steps
+       rdz = raise_h * math.sin(math.pi * t/steps)
+
+       theta1, theta2, theta3 = self.ik(hrx, hry, hrz+rdz)
+       self.set_angles('hind_left', theta1-angle+dt, theta2, theta3)
+
+       self.wait(step_wait)
+
+    self.wait(step_wait)
+
+  def strafe_left(self):
+    hrx = 80
+    hry = -90
+    hrz = -120
+
+    frx = 80
+    fry = -90
+    frz = -120
+
+    flx = 80
+    fly = -90
+    flz = -120
+
+    hlx = 80
+    hly = -90
+    hlz = -120
+
+    strafe_d = 40
+    raise_h = 38
+    step_wait = 0.02
+
+    print 'shift body left'
+    steps = 10
+    for t in range(1, steps + 1):
+      sdy = strafe_d * t/steps
+
+      self.set_angles('hind_right',  *self.ik(hrx, hry-sdy, hrz))
+      self.set_angles('front_right', *self.ik(frx, fry-sdy, frz))
+      self.set_angles('front_left',  *self.ik(flx, fly+sdy, flz))
+      self.set_angles('hind_left',   *self.ik(hlx, hly+sdy, hlz))
+
+      self.wait(step_wait)
+
+    hry -= strafe_d
+    fry -= strafe_d
+    fly += strafe_d
+    hly += strafe_d
+
+    self.wait(step_wait)
+
+    print 'readjust hl'
+    steps = 10
+    for t in range(1, steps + 1):
+      dy = t * strafe_d/steps
+      rdz = raise_h * math.sin(math.pi * t/steps)
+
+      self.set_angles('hind_left', *self.ik(hlx, hly-dy, hlz+rdz))
+
+      self.wait(step_wait)
+
+    hly -= strafe_d
+
+    self.wait(step_wait)
+
+    print 'readjust fl'
+    steps = 10
+    for t in range(1, steps + 1):
+      dy = t * strafe_d/steps
+      rdz = raise_h * math.sin(math.pi * t/steps)
+
+      self.set_angles('front_left', *self.ik(flx, fly-dy, flz+rdz))
+
+      self.wait(step_wait)
+
+    fly -= strafe_d
+
+    self.wait(step_wait)
+
+    print 'readjust hr'
+    steps = 10
+    for t in range(1, steps + 1):
+      dy = t * strafe_d/steps
+      rdz = raise_h * math.sin(math.pi * t/steps)
+
+      self.set_angles('hind_right', *self.ik(hrx, hry+dy, hrz+rdz))
+
+      self.wait(step_wait)
+
+    hry += strafe_d
+
+    self.wait(step_wait)
+
+    print 'readjust fr'
+    steps = 10
+    for t in range(1, steps + 1):
+      dy = t * strafe_d/steps
+      rdz = raise_h * math.sin(math.pi * t/steps)
+
+      self.set_angles('front_right', *self.ik(frx, fry+dy, frz+rdz))
+
+      self.wait(step_wait)
+
+    fry += strafe_d
+
+    self.wait(step_wait)
+
 
 # The main program starts from here
 
