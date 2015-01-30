@@ -340,7 +340,10 @@ float hly = -80;
 float hlz = -130;
 
 
-void turn_left()
+// turn left or right depending on the order of legs:
+// fl, hl, hr, fr to turn left
+// fr, hr, hl, fl to turn right
+void turn(int leg_front1, int leg_hind1, int leg_hind2, int leg_front2)
 {
     float angle, raise_h, steps, dt, rdz, solutions[24], theta1;
     int t, step_delay;
@@ -353,180 +356,96 @@ void turn_left()
     if (iksearch_fk(hrx, hry, hrz, A1, A2, A3, A4, D1, D2, D3, solutions)) {
         theta1 = solutions[0];
 
-        // turning left
+        // turn body
         for (t = 0; t <= (int) steps; t++) {
             dt = angle * t/steps;
 
-            joint_rotate(&joints[LEG_FL], theta1+dt);
-            joint_rotate(&joints[LEG_HL], theta1-dt*1.5);
-            joint_rotate(&joints[LEG_HR], theta1+dt);
-            joint_rotate(&joints[LEG_FR], theta1-dt*0.5);
+            joint_rotate(&joints[leg_front1], theta1+dt);
+            joint_rotate(&joints[leg_hind1], theta1-dt*1.5);
+            joint_rotate(&joints[leg_hind2], theta1+dt);
+            joint_rotate(&joints[leg_front2], theta1-dt*0.5);
 
             delay(step_delay);
         }
 
-        // readjust fl
+        // readjust front leg 1
         for (t = 0; t <= (int) steps; t++) {
             dt = angle * t/steps;
             rdz = raise_h * sin(M_PI * t/steps);
 
             if (iksearch_fk(hrx, hry, hrz+rdz, A1, A2, A3, A4, D1, D2, D3, solutions)) {
-                joint_rotate(&joints[LEG_FL],   solutions[0]+angle-dt);
-                joint_rotate(&joints[LEG_FL+1], solutions[1]);
-                joint_rotate(&joints[LEG_FL+2], solutions[2]);
+                joint_rotate(&joints[leg_front1],   solutions[0]+angle-dt);
+                joint_rotate(&joints[leg_front1+1], solutions[1]);
+                joint_rotate(&joints[leg_front1+2], solutions[2]);
             }
 
             delay(step_delay);
         }
 
-        // readjust hl
+        // readjust hind leg 1
         for (t = 0; t <= (int) steps; t++) {
             dt = angle * t/steps;
             rdz = raise_h * sin(M_PI * t/steps);
 
             if (iksearch_fk(hrx, hry, hrz+rdz, A1, A2, A3, A4, D1, D2, D3, solutions)) {
-                joint_rotate(&joints[LEG_HL],   solutions[0]-angle*1.5+dt*2.0);
-                joint_rotate(&joints[LEG_HL+1], solutions[1]);
-                joint_rotate(&joints[LEG_HL+2], solutions[2]);
+                joint_rotate(&joints[leg_hind1],   solutions[0]-angle*1.5+dt*2.0);
+                joint_rotate(&joints[leg_hind1+1], solutions[1]);
+                joint_rotate(&joints[leg_hind1+2], solutions[2]);
             }
 
             delay(step_delay);
         }
 
-        // readjust hr
+        // readjust hind leg 2
         for (t = 0; t <= (int) steps; t++) {
             dt = angle * t/steps;
             rdz = raise_h * sin(M_PI * t/steps);
 
             if (iksearch_fk(hrx, hry, hrz+rdz, A1, A2, A3, A4, D1, D2, D3, solutions)) {
-                joint_rotate(&joints[LEG_HR],   solutions[0]+angle-dt*2);
-                joint_rotate(&joints[LEG_HR+1], solutions[1]);
-                joint_rotate(&joints[LEG_HR+2], solutions[2]);
+                joint_rotate(&joints[leg_hind2],   solutions[0]+angle-dt*2);
+                joint_rotate(&joints[leg_hind2+1], solutions[1]);
+                joint_rotate(&joints[leg_hind2+2], solutions[2]);
             }
 
             delay(step_delay);
         }
 
-        // readjust fr
+        // readjust front leg 2
         for (t = 0; t <= (int) steps; t++) {
             dt = angle * t/steps;
             rdz = raise_h * sin(M_PI * t/steps);
 
             if (iksearch_fk(hrx, hry, hrz+rdz, A1, A2, A3, A4, D1, D2, D3, solutions)) {
-                joint_rotate(&joints[LEG_FR],   solutions[0]-angle*0.5+dt);
-                joint_rotate(&joints[LEG_FR+1], solutions[1]);
-                joint_rotate(&joints[LEG_FR+2], solutions[2]);
+                joint_rotate(&joints[leg_front2],   solutions[0]-angle*0.5+dt);
+                joint_rotate(&joints[leg_front2+1], solutions[1]);
+                joint_rotate(&joints[leg_front2+2], solutions[2]);
             }
 
             delay(step_delay);
         }
 
-        // turning right to even the body out
+        // turn body in the opposite direction to even out
         for (t = 0; t <= (int) steps; t++) {
             dt = angle * t/steps;
 
-            joint_rotate(&joints[LEG_HL], theta1+angle-dt);
-            joint_rotate(&joints[LEG_HR], theta1-angle*0.5+dt*0.5);
-            joint_rotate(&joints[LEG_FR], theta1+angle*0.5-dt*0.5);
+            joint_rotate(&joints[leg_hind1], theta1+angle-dt);
+            joint_rotate(&joints[leg_hind2], theta1-angle*0.5+dt*0.5);
+            joint_rotate(&joints[leg_front2], theta1+angle*0.5-dt*0.5);
 
             delay(step_delay);
         }
     }
-} // turn_left
+} // turn
+
+void turn_left()
+{
+    turn(LEG_FL, LEG_HL, LEG_HR, LEG_FR);
+}
 
 void turn_right()
 {
-    float angle, raise_h, steps, dt, rdz, solutions[24], theta1;
-    int t, step_delay;
-
-    raise_h = 42;
-    angle = 30;
-    steps = 10;
-    step_delay = 30;
-
-    if (iksearch_fk(hrx, hry, hrz, A1, A2, A3, A4, D1, D2, D3, solutions)) {
-        theta1 = solutions[0];
-
-        // turning right
-        for (t = 0; t <= (int) steps; t++) {
-            dt = angle * t/steps;
-
-            joint_rotate(&joints[LEG_FR], theta1+dt);
-            joint_rotate(&joints[LEG_HR], theta1-dt*1.5);
-            joint_rotate(&joints[LEG_HL], theta1+dt);
-            joint_rotate(&joints[LEG_FL], theta1-dt*0.5);
-
-            delay(step_delay);
-        }
-
-        // readjust fr
-        for (t = 0; t <= (int) steps; t++) {
-            dt = angle * t/steps;
-            rdz = raise_h * sin(M_PI * t/steps);
-
-            if (iksearch_fk(hrx, hry, hrz+rdz, A1, A2, A3, A4, D1, D2, D3, solutions)) {
-                joint_rotate(&joints[LEG_FR],   solutions[0]+angle-dt);
-                joint_rotate(&joints[LEG_FR+1], solutions[1]);
-                joint_rotate(&joints[LEG_FR+2], solutions[2]);
-            }
-
-            delay(step_delay);
-        }
-
-        // readjust hr
-        for (t = 0; t <= (int) steps; t++) {
-            dt = angle * t/steps;
-            rdz = raise_h * sin(M_PI * t/steps);
-
-            if (iksearch_fk(hrx, hry, hrz+rdz, A1, A2, A3, A4, D1, D2, D3, solutions)) {
-                joint_rotate(&joints[LEG_HR],   solutions[0]-angle*1.5+dt*2.0);
-                joint_rotate(&joints[LEG_HR+1], solutions[1]);
-                joint_rotate(&joints[LEG_HR+2], solutions[2]);
-            }
-
-            delay(step_delay);
-        }
-
-        // readjust hl
-        for (t = 0; t <= (int) steps; t++) {
-            dt = angle * t/steps;
-            rdz = raise_h * sin(M_PI * t/steps);
-
-            if (iksearch_fk(hrx, hry, hrz+rdz, A1, A2, A3, A4, D1, D2, D3, solutions)) {
-                joint_rotate(&joints[LEG_HL],   solutions[0]+angle-dt*2.0);
-                joint_rotate(&joints[LEG_HL+1], solutions[1]);
-                joint_rotate(&joints[LEG_HL+2], solutions[2]);
-            }
-
-            delay(step_delay);
-        }
-
-        // readjust fl
-        for (t = 0; t <= (int) steps; t++) {
-            dt = angle * t/steps;
-            rdz = raise_h * sin(M_PI * t/steps);
-
-            if (iksearch_fk(hrx, hry, hrz+rdz, A1, A2, A3, A4, D1, D2, D3, solutions)) {
-                joint_rotate(&joints[LEG_FL],   solutions[0]-angle*0.5+dt);
-                joint_rotate(&joints[LEG_FL+1], solutions[1]);
-                joint_rotate(&joints[LEG_FL+2], solutions[2]);
-            }
-
-            delay(step_delay);
-        }
-
-        // turning left to even the body out
-        for (t = 0; t <= (int) steps; t++) {
-            dt = angle * t/steps;
-
-            joint_rotate(&joints[LEG_HR], theta1+angle-dt);
-            joint_rotate(&joints[LEG_HL], theta1-angle*0.5+dt*0.5);
-            joint_rotate(&joints[LEG_FL], theta1+angle*0.5-dt*0.5);
-
-            delay(step_delay);
-        }
-    }
-} // turn_right
+    turn(LEG_FR, LEG_HR, LEG_HL, LEG_FL);
+}
 
 void strafe_left()
 {
@@ -982,19 +901,8 @@ void setup()
 
     Serial.println("Starting walking...");
 
-    strafe_left();
-    strafe_left();
-
-    strafe_right();
-    strafe_right();
-
-    walk_forward();
-
     turn_left();
-    turn_left();
-
-    //turn_right();
-    //turn_right();
+    turn_right();
 
     Serial.println("Leg positions:");
     print_xyz(hrx, hry, hrz);
