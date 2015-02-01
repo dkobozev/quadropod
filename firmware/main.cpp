@@ -347,99 +347,74 @@ void leg_set_position(int leg, float x, float y, float z)
     }
 }
 
+const float turn_steps = 10;
+const float turn_raise_h = 42;
+const float angle = 30;
+const int turn_step_delay = 30;
+
+void turn_step(int leg, float angle_multiplier, float multiplier)
+{
+    float rdz, dt, solutions[24];
+    int t;
+
+    for (t = 0; t <= (int) turn_steps; t++) {
+        dt = angle * t/turn_steps;
+        rdz = turn_raise_h * sin(M_PI * t/turn_steps);
+
+        if (iksearch_fk(lcs[LEG_HR], lcs[LEG_HR+1], lcs[LEG_HR+2]+rdz, A1, A2, A3, A4, D1, D2, D3, solutions)) {
+            joint_rotate(&joints[leg],   solutions[0]+angle*angle_multiplier-dt*multiplier);
+            joint_rotate(&joints[leg+1], solutions[1]);
+            joint_rotate(&joints[leg+2], solutions[2]);
+        }
+
+        delay(turn_step_delay);
+    }
+}
+
 // turn left or right depending on the order of legs:
 // fl, hl, hr, fr to turn left
 // fr, hr, hl, fl to turn right
 void turn(int leg_front1, int leg_hind1, int leg_hind2, int leg_front2)
 {
-    float angle, raise_h, steps, dt, rdz, solutions[24], theta1;
-    int t, step_delay;
-
-    raise_h = 42;
-    angle = 30;
-    steps = 10;
-    step_delay = 30;
+    float dt, solutions[24], theta1;
+    int t;
 
     if (iksearch_fk(lcs[LEG_HR], lcs[LEG_HR+1], lcs[LEG_HR+2], A1, A2, A3, A4, D1, D2, D3, solutions)) {
         theta1 = solutions[0];
 
         // turn body
-        for (t = 0; t <= (int) steps; t++) {
-            dt = angle * t/steps;
+        for (t = 0; t <= (int) turn_steps; t++) {
+            dt = angle * t/turn_steps;
 
             joint_rotate(&joints[leg_front1], theta1+dt);
             joint_rotate(&joints[leg_hind1], theta1-dt*1.5);
             joint_rotate(&joints[leg_hind2], theta1+dt);
             joint_rotate(&joints[leg_front2], theta1-dt*0.5);
 
-            delay(step_delay);
+            delay(turn_step_delay);
         }
 
         // readjust front leg 1
-        for (t = 0; t <= (int) steps; t++) {
-            dt = angle * t/steps;
-            rdz = raise_h * sin(M_PI * t/steps);
-
-            if (iksearch_fk(lcs[LEG_HR], lcs[LEG_HR+1], lcs[LEG_HR+2]+rdz, A1, A2, A3, A4, D1, D2, D3, solutions)) {
-                joint_rotate(&joints[leg_front1],   solutions[0]+angle-dt);
-                joint_rotate(&joints[leg_front1+1], solutions[1]);
-                joint_rotate(&joints[leg_front1+2], solutions[2]);
-            }
-
-            delay(step_delay);
-        }
+        turn_step(leg_front1, 1, 1);
 
         // readjust hind leg 1
-        for (t = 0; t <= (int) steps; t++) {
-            dt = angle * t/steps;
-            rdz = raise_h * sin(M_PI * t/steps);
-
-            if (iksearch_fk(lcs[LEG_HR], lcs[LEG_HR+1], lcs[LEG_HR+2]+rdz, A1, A2, A3, A4, D1, D2, D3, solutions)) {
-                joint_rotate(&joints[leg_hind1],   solutions[0]-angle*1.5+dt*2.0);
-                joint_rotate(&joints[leg_hind1+1], solutions[1]);
-                joint_rotate(&joints[leg_hind1+2], solutions[2]);
-            }
-
-            delay(step_delay);
-        }
+        turn_step(leg_hind1, -1.5, -2);
 
         // readjust hind leg 2
-        for (t = 0; t <= (int) steps; t++) {
-            dt = angle * t/steps;
-            rdz = raise_h * sin(M_PI * t/steps);
-
-            if (iksearch_fk(lcs[LEG_HR], lcs[LEG_HR+1], lcs[LEG_HR+2]+rdz, A1, A2, A3, A4, D1, D2, D3, solutions)) {
-                joint_rotate(&joints[leg_hind2],   solutions[0]+angle-dt*2);
-                joint_rotate(&joints[leg_hind2+1], solutions[1]);
-                joint_rotate(&joints[leg_hind2+2], solutions[2]);
-            }
-
-            delay(step_delay);
-        }
+        turn_step(leg_hind2, 1, 2);
 
         // readjust front leg 2
-        for (t = 0; t <= (int) steps; t++) {
-            dt = angle * t/steps;
-            rdz = raise_h * sin(M_PI * t/steps);
-
-            if (iksearch_fk(lcs[LEG_HR], lcs[LEG_HR+1], lcs[LEG_HR+2]+rdz, A1, A2, A3, A4, D1, D2, D3, solutions)) {
-                joint_rotate(&joints[leg_front2],   solutions[0]-angle*0.5+dt);
-                joint_rotate(&joints[leg_front2+1], solutions[1]);
-                joint_rotate(&joints[leg_front2+2], solutions[2]);
-            }
-
-            delay(step_delay);
-        }
+        turn_step(leg_front2, -0.5, -1);
 
         // turn body in the opposite direction to even out
-        for (t = 0; t <= (int) steps; t++) {
-            dt = angle * t/steps;
+        for (t = 0; t <= (int) turn_steps; t++) {
+            dt = angle * t/turn_steps;
 
             joint_rotate(&joints[leg_hind1], theta1+angle-dt);
             joint_rotate(&joints[leg_hind2], theta1-angle*0.5+dt*0.5);
             joint_rotate(&joints[leg_front2], theta1+angle*0.5-dt*0.5);
 
-            delay(step_delay);
+            delay(turn_step_delay);
         }
     }
 } // turn
@@ -454,107 +429,74 @@ void turn_right()
     turn(LEG_FR, LEG_HR, LEG_HL, LEG_FL);
 }
 
+const float strafe_raise_h = 38;
+const float strafe_d = 50;
+const float strafe_steps = 10;
+const int strafe_step_delay = 30;
+
+void strafe_shift_body(int direction, float multiplier)
+{
+    float sdy;
+    int t;
+
+    for (t = 0; t <= (int) strafe_steps; t++) {
+        sdy = direction * strafe_d * t/strafe_steps;
+
+        leg_set_position(LEG_HR, lcs[LEG_HR], lcs[LEG_HR+1]+sdy*multiplier, lcs[LEG_HR+2]);
+        leg_set_position(LEG_FR, lcs[LEG_FR], lcs[LEG_FR+1]+sdy*multiplier, lcs[LEG_FR+2]);
+        leg_set_position(LEG_FL, lcs[LEG_FL], lcs[LEG_FL+1]-sdy*multiplier, lcs[LEG_FL+2]);
+        leg_set_position(LEG_HL, lcs[LEG_HL], lcs[LEG_HL+1]-sdy*multiplier, lcs[LEG_HL+2]);
+
+        delay(strafe_step_delay);
+    }
+}
+
+void strafe_step(int leg, int multiplier)
+{
+    float dy, rdz;
+    int t;
+
+    for (t = 0; t <= (int) strafe_steps; t++) {
+        dy = strafe_d * t/strafe_steps;
+        rdz = strafe_raise_h * sin(M_PI * t/strafe_steps);
+
+        leg_set_position(leg, lcs[leg], lcs[leg+1]+dy*multiplier, lcs[leg+2]+rdz);
+
+        delay(strafe_step_delay);
+    }
+}
+
 // strafe left or right depending on the order of legs:
 // fr, hr, hl, fl to strafe left
 // fl, hl, hr, fr to strafe right
 void strafe(int leg_front1, int leg_hind1, int leg_hind2, int leg_front2, int direction)
 {
-    float strafe_d, raise_h, sdy, dy, rdz, steps;
-    int t, step_delay;
-
-    strafe_d = 50;
-    raise_h = 38;
-    steps = 10;
-    step_delay = 30;
-
     // shift body in the direction we want to strafe
-    for (t = 0; t <= (int) steps; t++) {
-        sdy = direction * strafe_d * t/steps;
-
-        leg_set_position(LEG_HR, lcs[LEG_HR], lcs[LEG_HR+1]+sdy, lcs[LEG_HR+2]);
-        leg_set_position(LEG_FR, lcs[LEG_FR], lcs[LEG_FR+1]+sdy, lcs[LEG_FR+2]);
-        leg_set_position(LEG_FL, lcs[LEG_FL], lcs[LEG_FL+1]-sdy, lcs[LEG_FL+2]);
-        leg_set_position(LEG_HL, lcs[LEG_HL], lcs[LEG_HL+1]-sdy, lcs[LEG_HL+2]);
-
-        delay(step_delay);
-    }
-
+    strafe_shift_body(direction, 1);
     update_leg_coords();
 
     // readjust hind leg 1
-    for (t = 0; t <= (int) steps; t++) {
-        dy = strafe_d * t/steps;
-        rdz = raise_h * sin(M_PI * t/steps);
-
-        leg_set_position(leg_hind1, lcs[leg_hind1], lcs[leg_hind1+1]+dy, lcs[leg_hind1+2]+rdz);
-
-        delay(step_delay);
-    }
-
+    strafe_step(leg_hind1, 1);
     update_leg_coords();
 
     // readjust front leg 1
-    for (t = 0; t <= (int) steps; t++) {
-        dy = strafe_d * t/steps;
-        rdz = raise_h * sin(M_PI * t/steps);
-
-        leg_set_position(leg_front1, lcs[leg_front1], lcs[leg_front1+1]+dy, lcs[leg_front1+2]+rdz);
-
-        delay(step_delay);
-    }
-
+    strafe_step(leg_front1, 1);
     update_leg_coords();
 
     // shift body in the opposite direction for stability
-    for (t = 0; t <= (int) steps; t++) {
-        sdy = direction * strafe_d * t/steps;
-
-        leg_set_position(LEG_HR, lcs[LEG_HR], lcs[LEG_HR+1]-sdy*0.75, lcs[LEG_HR+2]);
-        leg_set_position(LEG_FR, lcs[LEG_FR], lcs[LEG_FR+1]-sdy*0.75, lcs[LEG_FR+2]);
-        leg_set_position(LEG_FL, lcs[LEG_FL], lcs[LEG_FL+1]+sdy*0.75, lcs[LEG_FL+2]);
-        leg_set_position(LEG_HL, lcs[LEG_HL], lcs[LEG_HL+1]+sdy*0.75, lcs[LEG_HL+2]);
-
-        delay(step_delay);
-    }
-
+    strafe_shift_body(direction, -0.75);
     update_leg_coords();
 
     // readjust hind leg 2
-    for (t = 0; t <= (int) steps; t++) {
-        dy = strafe_d * t/steps;
-        rdz = raise_h * sin(M_PI * t/steps);
-
-        leg_set_position(leg_hind2, lcs[leg_hind2], lcs[leg_hind2+1]-dy, lcs[leg_hind2+2]+rdz);
-
-        delay(step_delay);
-    }
-
+    strafe_step(leg_hind2, -1);
     update_leg_coords();
 
     // readjust front leg 2
-    for (t = 0; t <= (int) steps; t++) {
-        dy = strafe_d * t/steps;
-        rdz = raise_h * sin(M_PI * t/steps);
-
-        leg_set_position(leg_front2, lcs[leg_front2], lcs[leg_front2+1]-dy, lcs[leg_front2+2]+rdz);
-
-        delay(step_delay);
-    }
-
+    strafe_step(leg_front2, -1);
     update_leg_coords();
 
     // shift body in the strafe direction again
-    for (t = 0; t <= (int) steps; t++) {
-        sdy = direction * strafe_d * t/steps;
-
-        leg_set_position(LEG_HR, lcs[LEG_HR], lcs[LEG_HR+1]+sdy*0.75, lcs[LEG_HR+2]);
-        leg_set_position(LEG_FR, lcs[LEG_FR], lcs[LEG_FR+1]+sdy*0.75, lcs[LEG_FR+2]);
-        leg_set_position(LEG_FL, lcs[LEG_FL], lcs[LEG_FL+1]-sdy*0.75, lcs[LEG_FL+2]);
-        leg_set_position(LEG_HL, lcs[LEG_HL], lcs[LEG_HL+1]-sdy*0.75, lcs[LEG_HL+2]);
-
-        delay(step_delay);
-    }
-
+    strafe_shift_body(direction, 0.75);
     update_leg_coords();
 } // strafe
 
@@ -568,112 +510,86 @@ void strafe_right()
     strafe(LEG_FL, LEG_HL, LEG_HR, LEG_FR, 1);
 }
 
-void legs_shift_step(int leg, int sign, int raise, int t, int steps, int leg_hind1, int leg_front1, int leg_front2, int leg_hind2)
+void walk_shift_step(int leg, int sign, int raise, int leg_hind1, int leg_front1, int leg_front2, int leg_hind2)
 {
     const float shift_dx = 13.75;
     const float shift_dy = 15;
-
     const float raise_d = 55;
     const float raise_h = 34;
+    const float steps = 10.0;
 
-    float sdx = shift_dx * t/steps;
-    float sdy = shift_dy * t/steps;
-    float rdt = raise_d * t/steps;
+    float sdx, sdy, rdt, rdz;
+    int t;
 
-    float rdz;
+    for (t = 0; t <= (int) steps; t++) {
+        sdx = shift_dx * t/steps;
+        sdy = shift_dy * t/steps;
+        rdt = raise_d * t/steps;
 
-    if (raise) {
-        rdz = raise_h * sin(M_PI/2 * t/steps);
-    } else {
-        rdz = raise_h * (sin(M_PI/2 + M_PI/2 * t/steps) - 1);
-    }
+        if (raise) {
+            rdz = raise_h * sin(M_PI/2 * t/steps);
+        } else {
+            rdz = raise_h * (sin(M_PI/2 + M_PI/2 * t/steps) - 1);
+        }
 
-    if (leg == leg_hind1) {
-        leg_set_position(leg_hind1,  lcs[leg_hind1]+sdx-rdt, lcs[leg_hind1+1]-sdy,  lcs[leg_hind1+2]+rdz);
-    } else {
-        leg_set_position(leg_hind1,  lcs[leg_hind1]+sdx, lcs[leg_hind1+1]-sdy*sign, lcs[leg_hind1+2]);
-    }
+        if (leg == leg_hind1) {
+            leg_set_position(leg_hind1,  lcs[leg_hind1]+sdx-rdt, lcs[leg_hind1+1]-sdy,  lcs[leg_hind1+2]+rdz);
+        } else {
+            leg_set_position(leg_hind1,  lcs[leg_hind1]+sdx, lcs[leg_hind1+1]-sdy*sign, lcs[leg_hind1+2]);
+        }
 
-    if (leg == leg_front1) {
-        leg_set_position(leg_front1, lcs[leg_front1]-sdx+rdt, lcs[leg_front1+1]+sdy, lcs[leg_front1+2]+rdz);
-    } else {
-        leg_set_position(leg_front1, lcs[leg_front1]-sdx, lcs[leg_front1+1]-sdy*sign, lcs[leg_front1+2]);
-    }
+        if (leg == leg_front1) {
+            leg_set_position(leg_front1, lcs[leg_front1]-sdx+rdt, lcs[leg_front1+1]+sdy, lcs[leg_front1+2]+rdz);
+        } else {
+            leg_set_position(leg_front1, lcs[leg_front1]-sdx, lcs[leg_front1+1]-sdy*sign, lcs[leg_front1+2]);
+        }
 
-    if (leg == leg_front2) {
-        leg_set_position(leg_front2, lcs[leg_front2]-sdx+rdt, lcs[leg_front2+1]+sdy, lcs[leg_front2+2]+rdz);
-    } else {
-        leg_set_position(leg_front2, lcs[leg_front2]-sdx, lcs[leg_front2+1]+sdy*sign, lcs[leg_front2+2]);
-    }
+        if (leg == leg_front2) {
+            leg_set_position(leg_front2, lcs[leg_front2]-sdx+rdt, lcs[leg_front2+1]+sdy, lcs[leg_front2+2]+rdz);
+        } else {
+            leg_set_position(leg_front2, lcs[leg_front2]-sdx, lcs[leg_front2+1]+sdy*sign, lcs[leg_front2+2]);
+        }
 
-    if (leg == leg_hind2) {
-        leg_set_position(leg_hind2,  lcs[leg_hind2]+sdx-rdt,  lcs[leg_hind2+1]-sdy,  lcs[leg_hind2+2]+rdz);
-    } else {
-        leg_set_position(leg_hind2, lcs[leg_hind2]+sdx, lcs[leg_hind2+1]+sdy*sign, lcs[leg_hind2+2]);
+        if (leg == leg_hind2) {
+            leg_set_position(leg_hind2,  lcs[leg_hind2]+sdx-rdt,  lcs[leg_hind2+1]-sdy,  lcs[leg_hind2+2]+rdz);
+        } else {
+            leg_set_position(leg_hind2, lcs[leg_hind2]+sdx, lcs[leg_hind2+1]+sdy*sign, lcs[leg_hind2+2]);
+        }
     }
 }
 
 void walk(int leg_front1, int leg_hind1, int leg_hind2, int leg_front2)
 {
-    float steps;
-    int t;
-
-    steps = 10.0;
-
     // shift body left, raise hind leg 1
-    for (t = 0; t <= (int) steps; t++) {
-        legs_shift_step(leg_hind1, 1, 1, t, steps, leg_hind1, leg_front1, leg_front2, leg_hind2);
-    }
-
+    walk_shift_step(leg_hind1, 1, 1, leg_hind1, leg_front1, leg_front2, leg_hind2);
     update_leg_coords();
 
     // shift body left, lower hind leg 1
-    for (t = 0; t <= (int) steps; t++) {
-        legs_shift_step(leg_hind1, 1, 0, t, steps, leg_hind1, leg_front1, leg_front2, leg_hind2);
-    }
-
+    walk_shift_step(leg_hind1, 1, 0, leg_hind1, leg_front1, leg_front2, leg_hind2);
     update_leg_coords();
 
-    // shift body right, raise fr
-    for (t = 0; t <= (int) steps; t++) {
-        legs_shift_step(leg_front1, -1, 1, t, steps, leg_hind1, leg_front1, leg_front2, leg_hind2);
-    }
-
+    // shift body right, raise front leg 1
+    walk_shift_step(leg_front1, -1, 1, leg_hind1, leg_front1, leg_front2, leg_hind2);
     update_leg_coords();
 
-    // shift body right, lower fr
-    for (t = 0; t <= (int) steps; t++) {
-        legs_shift_step(leg_front1, -1, 0, t, steps, leg_hind1, leg_front1, leg_front2, leg_hind2);
-    }
-
+    // shift body right, lower front leg 1
+    walk_shift_step(leg_front1, -1, 0, leg_hind1, leg_front1, leg_front2, leg_hind2);
     update_leg_coords();
 
-    // shift body right, raise hl
-    for (t = 0; t <= (int) steps; t++) {
-        legs_shift_step(leg_hind2, -1, 1, t, steps, leg_hind1, leg_front1, leg_front2, leg_hind2);
-    }
-
+    // shift body right, raise hind leg 2
+    walk_shift_step(leg_hind2, -1, 1, leg_hind1, leg_front1, leg_front2, leg_hind2);
     update_leg_coords();
 
-    // shift body right, lower hl
-    for (t = 0; t <= (int) steps; t++) {
-        legs_shift_step(leg_hind2, -1, 0, t, steps, leg_hind1, leg_front1, leg_front2, leg_hind2);
-    }
-
+    // shift body right, lower hind leg 2
+    walk_shift_step(leg_hind2, -1, 0, leg_hind1, leg_front1, leg_front2, leg_hind2);
     update_leg_coords();
 
-    // shift body left, raise fl
-    for (t = 0; t <= (int) steps; t++) {
-        legs_shift_step(leg_front2, 1, 1, t, steps, leg_hind1, leg_front1, leg_front2, leg_hind2);
-    }
-
+    // shift body left, raise front leg 2
+    walk_shift_step(leg_front2, 1, 1, leg_hind1, leg_front1, leg_front2, leg_hind2);
     update_leg_coords();
 
-    // shift body left, lower fl
-    for (t = 0; t <= (int) steps; t++) {
-        legs_shift_step(leg_front2, 1, 0, t, steps, leg_hind1, leg_front1, leg_front2, leg_hind2);
-    }
-
+    // shift body left, lower front leg 2
+    walk_shift_step(leg_front2, 1, 0, leg_hind1, leg_front1, leg_front2, leg_hind2);
     update_leg_coords();
 } // walk
 
