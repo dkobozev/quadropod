@@ -601,6 +601,7 @@ void walk_forward()
 void setup()
 {
     int i, dir, start, min, max;
+    int incomingByte = 0;
 
     Serial.begin(9600); // workaround for delay() bug
 
@@ -616,28 +617,41 @@ void setup()
 
     delay(2000);
 
-    Serial.println("Starting walking...");
+    while (1) {
+        // send data only when you receive data:
+        if (Serial.available() > 0) {
+            // read the incoming byte:
+            incomingByte = Serial.read();
+            Serial.read(); // line feed
 
-    walk_forward();
-    walk_forward();
+            Serial.print("I received: ");
+            Serial.println(incomingByte, DEC);
 
-    strafe_left();
-    strafe_right();
+            if (incomingByte == 'w') {
+                walk_forward();
+            } else if (incomingByte == 'a') {
+                strafe_left();
+            } else if (incomingByte == 'd') {
+                strafe_right();
+            } else if (incomingByte == 's') {
+                // walk backward
+            } else if (incomingByte == 'q') {
+                turn_left();
+            } else if (incomingByte == 'e') {
+                turn_right();
+            }
+        }
+    }
 
-    walk_forward();
+    //Serial.println("Starting walking...");
 
-    turn_left();
-    turn_right();
+    //Serial.println("Leg positions:");
+    //print_xyz(lcs[LEG_HR], lcs[LEG_HR+1], lcs[LEG_HR+2]);
+    //print_xyz(lcs[LEG_FR], lcs[LEG_FR+1], lcs[LEG_FR+2]);
+    //print_xyz(lcs[LEG_FL], lcs[LEG_FL+1], lcs[LEG_FL+2]);
+    //print_xyz(lcs[LEG_HL], lcs[LEG_HL+1], lcs[LEG_HL+2]);
 
-    walk_forward();
-
-    Serial.println("Leg positions:");
-    print_xyz(lcs[LEG_HR], lcs[LEG_HR+1], lcs[LEG_HR+2]);
-    print_xyz(lcs[LEG_FR], lcs[LEG_FR+1], lcs[LEG_FR+2]);
-    print_xyz(lcs[LEG_FL], lcs[LEG_FL+1], lcs[LEG_FL+2]);
-    print_xyz(lcs[LEG_HL], lcs[LEG_HL+1], lcs[LEG_HL+2]);
-
-    Serial.println("Done");
+    //Serial.println("Done");
 }
 
 void loop()
